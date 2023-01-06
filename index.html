@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>課後館考卷</title>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+            integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
+        <link rel="stylesheet" href="./css/base.css" />
+        <link rel="stylesheet" href="./css/index.css" />
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"
+            integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        ></script>
+        <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+        <script>
+            Vue.config.devtools = true;
+        </script>
+    </head>
+    <body>
+        <div id="app">
+            <section id="exam_top">
+                <div>
+                    <h1>建立考卷</h1>
+                    <input
+                        type="checkbox"
+                        id="create_check"
+                        @click="createOpen = true"
+                    />
+                    <label
+                        for="create_check"
+                        class="confirm"
+                        v-if="!createOpen"
+                    >
+                        <i class="fa-solid fa-circle-plus"></i>
+                    </label>
+                    <div class="create_blk" v-if="createOpen">
+                        <div class="select_blk">
+                            <div>
+                                <span>學年</span>
+                                <select
+                                    name="year"
+                                    id="year"
+                                    @change="concatName()"
+                                >
+                                    <option disabled selected>學年</option>
+                                    <option value="111">111</option>
+                                </select>
+                            </div>
+                            <div>
+                                <span>冊別</span>
+                                <select
+                                    name="semester"
+                                    id="semester"
+                                    @change="concatName()"
+                                >
+                                    <option disabled selected>冊別</option>
+                                    <option value="1">(七上)</option>
+                                    <option value="2">(七下)</option>
+                                    <option value="3">(八上)</option>
+                                    <option value="4">(八下)</option>
+                                    <option value="5">(九上)</option>
+                                    <option value="6">(九下)</option>
+                                    <option value="7">(總複習)</option>
+                                    <option value="0">(素養)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <span>科目</span>
+                                <select
+                                    name="subject"
+                                    id="subject"
+                                    @change="concatName()"
+                                    v-model="subjectId"
+                                >
+                                    <option disabled selected value="">
+                                        科目
+                                    </option>
+                                    <option value="1">國文</option>
+                                    <option value="3">英文</option>
+                                    <option value="5">數學</option>
+                                    <option value="12">地理</option>
+                                    <option value="13">歷史</option>
+                                    <option value="11">公民</option>
+                                    <option value="7">理化</option>
+                                    <option value="8">生物</option>
+                                    <option value="9">地科</option>
+                                </select>
+                            </div>
+                            <div>
+                                <span>類型</span>
+                                <select
+                                    name="type"
+                                    id="test_type"
+                                    @change="concatName()"
+                                    v-model="testTypeId"
+                                >
+                                    <option disabled selected value="">
+                                        類型
+                                    </option>
+                                    <option value="1">週卷</option>
+                                    <option value="2">段考</option>
+                                    <option value="3">模考</option>
+                                    <option value="4">多練習</option>
+                                </select>
+                            </div>
+                            <div>
+                                <span>出版社</span>
+                                <select
+                                    name="source"
+                                    id="source"
+                                    @change="concatName()"
+                                >
+                                    <option disabled selected value="">
+                                        出版社
+                                    </option>
+                                    <option value="1">康軒</option>
+                                    <option value="2">南一</option>
+                                    <option value="3">翰林</option>
+                                    <option value="4">自編</option>
+                                </select>
+                            </div>
+                            <div>
+                                <span>範圍</span>
+                                <input
+                                    type="text"
+                                    placeholder="ex:一段、U1"
+                                    id="range"
+                                    @change="concatName()"
+                                />
+                            </div>
+                        </div>
+                        <div class="test_name">
+                            <span>考卷名稱</span>
+                            <p id="test_name" v-model="testName">
+                                {{testName}}
+                            </p>
+                        </div>
+                        <div class="test_info">
+                            <div class="test_grade">
+                                <span>適用年級</span>
+                                <select name="grade" id="grade" v-model="grade">
+                                    <option disabled selected value="">
+                                        適用年級
+                                    </option>
+                                    <option value="1">國七</option>
+                                    <option value="2">國八</option>
+                                    <option value="3">國九</option>
+                                    <option value="4">不分</option>
+                                    <option value="5">國五</option>
+                                    <option value="6">國六</option>
+                                </select>
+                            </div>
+                            <div class="test_time">
+                                <span>考試時間(分鐘)</span>
+                                <input
+                                    type="text"
+                                    placeholder="ex:60"
+                                    id="time"
+                                    v-model="duration"
+                                />
+                            </div>
+                            <div>
+                                <span>請選擇考卷種類:</span>
+                                <select name="category" id="category">
+                                    <option disabled selected value="">
+                                        考卷種類
+                                    </option>
+                                    <option value="">選擇</option>
+                                    <option value="">填充/翻譯</option>
+                                    <option value="">作文</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="test_action">
+                            <label class="create_btn" @click="createTest"
+                                >建立</label
+                            >
+                            <label
+                                class="cancel_btn"
+                                for="create_check"
+                                @click="createOpen = false"
+                                >取消</label
+                            >
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section></section>
+            <section id="exam_list">
+                <h1>考卷列表</h1>
+                <div class="select_blk">
+                    <div>
+                        <span>狀態:</span>
+                        <select @change="statusChange($event)">
+                            <option value="0">待審核</option>
+                            <option value="1">待修正</option>
+                            <option value="2">已上架</option>
+                            <option value="-1">已下架</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span>科目:</span>
+                        <select @change="subjectChange($event)">
+                            <option value="1">國文</option>
+                            <option value="3">英文</option>
+                            <option value="5">數學</option>
+                            <option value="11">公民</option>
+                            <option value="12">地理</option>
+                            <option value="13">歷史</option>
+                            <option value="7">理化</option>
+                            <option value="8">生物</option>
+                            <option value="9">地科</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span>冊別:</span>
+                        <select @change="gradeChange($event)">
+                            <option value="">全部</option>
+                            <option value="1">七上</option>
+                            <option value="2">七下</option>
+                            <option value="3">八上</option>
+                            <option value="4">八下</option>
+                            <option value="5">九上</option>
+                            <option value="6">九下</option>
+                            <option value="7">總複習</option>
+                            <option value="0">素養</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- <div class="tab">
+                    <input
+                        type="radio"
+                        name="subject_tabs"
+                        id="ch_tab"
+                        value="1"
+                        checked
+                    />
+                    <label for="ch_tab" value="ch" @click="getExamList(1)">
+                        國文
+                    </label>
+                    <input
+                        type="radio"
+                        name="subject_tabs"
+                        id="en_tab"
+                        value="3"
+                    />
+                    <label for="en_tab" @click="getExamList(3)">英文</label>
+                    <input
+                        type="radio"
+                        name="subject_tabs"
+                        id="ma_tab"
+                        value="5"
+                    />
+                    <label for="ma_tab" @click="getExamList(5)">數學</label>
+                    <input
+                        type="radio"
+                        name="subject_tabs"
+                        id="11_tab"
+                        value="11"
+                    />
+                    <label for="11_tab" @click="getExamList(11)">公民</label>
+                    <input
+                        type="radio"
+                        name="subject_tabs"
+                        id="12_tab"
+                        value="12"
+                    />
+                    <label for="12_tab" @click="getExamList(12)">地理</label>
+                    <input
+                        type="radio"
+                        name="subject_tabs"
+                        id="13_tab"
+                        value="13"
+                    />
+                    <label for="13_tab" @click="getExamList(13)">歷史</label>
+                    <input
+                        type="radio"
+                        name="subject_tabs"
+                        id="7_tab"
+                        value="7"
+                    />
+                    <label for="7_tab" @click="getExamList(7)">理化</label>
+                    <input
+                        type="radio"
+                        name="subject_tabs"
+                        id="8_tab"
+                        value="8"
+                    />
+                    <label for="8_tab" @click="getExamList(8)">生物</label>
+                    <input
+                        type="radio"
+                        name="subject_tabs"
+                        id="9_tab"
+                        value="9"
+                    />
+                    <label for="9_tab" @click="getExamList(9)">地科</label>
+                    <div class="search">
+                        <input type="text" placeholder="搜尋考卷" />
+                        <div>搜尋</div>
+                    </div>
+                </div> -->
+                <table class="list">
+                    <thead>
+                        <tr>
+                            <th>編號</th>
+                            <th>名稱</th>
+                            <th>類型</th>
+                            <th>年級</th>
+                            <th>編輯</th>
+                            <th>狀態</th>
+                            <th v-if="status===0">審核</th>
+                            <th v-if="status===1">修正</th>
+                            <th v-if="status===2">下架</th>
+                            <th v-if="status===-1">複製</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list_body">
+                        <tr v-for="(item,index) in testList">
+                            <td>{{item.id}}</td>
+                            <td>{{item.testName}}</td>
+                            <td>{{item.testType}}</td>
+                            <td>{{item.schoolYear}}</td>
+                            <td>
+                                <i
+                                    class="fa-sharp fa-solid fa-eye"
+                                    @click="getExamContent(item.id,1)"
+                                ></i>
+                                <i
+                                    class="fa-solid fa-pen-to-square"
+                                    v-if="status!== 1 && status !== 2 && status !== -1"
+                                    @click="editTest(item.testName,item.id)"
+                                ></i>
+                                <i
+                                    class="fa-solid fa-trash-can"
+                                    v-if="status !== 2 && status !== -1"
+                                    @click="deleteTest(0,item.testName,item.id)"
+                                ></i>
+                            </td>
+                            <td class="status_0" v-if="status===0">
+                                <span>待審核</span>
+                            </td>
+                            <td class="status_1" v-if="status===1">
+                                <span>待修正</span>
+                            </td>
+                            <td class="status_2" v-if="status===2">
+                                <span>已上架</span>
+                            </td>
+                            <td class="status_-1" v-if="status===-1">
+                                <span>已下架</span>
+                            </td>
+                            <td v-if="status===0">
+                                <button @click="getExamContent(item.id,2)">
+                                    審核
+                                </button>
+                            </td>
+                            <td v-if="status===1">
+                                <button
+                                    @click="editTest(item.testName,item.id)"
+                                >
+                                    修正
+                                </button>
+                            </td>
+                            <td
+                                v-if="status===2"
+                                @click="getExamContent(item.id,3)"
+                            >
+                                <button>下架</button>
+                            </td>
+                            <td v-if="status===-1">
+                                <button>複製</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            <section id="exam_pop" v-show="pop">
+                <i class="fa-solid fa-xmark" @click="pop = !pop"></i>
+                <div class="pop_wrapper">
+                    <h1 id="test_name">{{testName}}</h1>
+                    <span>題數:{{questionCount}}</span>
+                    <div id="single_content" v-if="single.length > 0">
+                        <h2>單選</h2>
+                        <div v-for="(item,index) in single">
+                            <div class="question">
+                                {{index+1}}.{{item.options[0].optionQuestion}}
+                            </div>
+                            <div class="trans_title"></div>
+                            <img
+                                :src="item.pictures[0].fileName"
+                                alt=""
+                                v-if="item.pictures.length > 0"
+                            />
+                            <ul>
+                                <li
+                                    v-for="(op,id) in item.options[0].optionDetails"
+                                >
+                                    <span class="answer">
+                                        ({{op.questionOption}}){{op.optionDetails}}</span
+                                    >
+
+                                    <sapn class="trans_ans"></sapn>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="group_content" v-if="group.length > 0">
+                        <h2>題組</h2>
+                        <div v-for="(item,index) in group">
+                            <div class="group_question">{{item.question}}</div>
+                            <img
+                                :src="item.pictures[0].fileName"
+                                alt=""
+                                v-if="item.pictures.length > 0"
+                            />
+                            <div v-for="(op,id) in item.options">
+                                <div class="question">
+                                    {{id+1}}.{{op.optionQuestion}}
+                                </div>
+                                <div class="trans_title"></div>
+                                <ul>
+                                    <li v-for="(de,indx) in op.optionDetails">
+                                        <span class="answer"
+                                            >({{de.questionOption}}){{de.optionDetails}}</span
+                                        >
+
+                                        <span class="trans_ans"></span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="boolean_content" v-if="boolean.length > 0">
+                        <h2>是非題</h2>
+                        <ul>
+                            <li v-for="(item, index) in boolean">
+                                <div class="question">
+                                    {{ index + 1 }}.{{ item.question }}
+                                </div>
+                                <div class="trans_title"></div>
+                                <ul>
+                                    <li>
+                                        <label> 是 </label>
+                                    </li>
+                                    <li>
+                                        <label> 非 </label>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            <section id="check_pop" v-if="checkPop">
+                <i class="fa-solid fa-xmark" @click="checkPop = !checkPop"></i>
+                <div class="pop_wrapper">
+                    <h1 id="test_name">{{testName}}</h1>
+                    <span>題數:{{questionCount}}</span>
+                    <div id="single_content" v-if="single.length > 0">
+                        <h2>單選</h2>
+                        <div v-for="(item,index) in single">
+                            <div class="check_blk">
+                                <input
+                                    class="correct"
+                                    type="radio"
+                                    :id="'singleCorrect'+index"
+                                    :name="'single'+index"
+                                    @change="actionCheck($event)"
+                                />
+                                <label :for="'singleCorrect'+index">正確</label>
+                                <input
+                                    class="wrong"
+                                    type="radio"
+                                    :id="'singleFault'+index"
+                                    :name="'single'+index"
+                                    @change="actionCheck($event)"
+                                />
+                                <label :for="'singleFault'+index">有誤</label>
+                                <div class="question_blk">
+                                    <div class="question">
+                                        {{index+1}}.{{item.options[0].optionQuestion}}
+                                    </div>
+                                    <div class="trans_title"></div>
+                                    <img
+                                        :src="item.pictures[0].fileName"
+                                        alt=""
+                                        v-if="item.pictures.length > 0"
+                                    />
+                                    <ul>
+                                        <li
+                                            v-for="(op,id) in item.options[0].optionDetails"
+                                        >
+                                            <span class="answer">
+                                                ({{op.questionOption}}){{op.optionDetails}}</span
+                                            >
+
+                                            <sapn class="trans_ans"></sapn>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <textarea
+                                    class="comment_blk"
+                                    placeholder="請填寫錯誤註解"
+                                ></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="group_content" v-if="group.length > 0">
+                        <h2>題組</h2>
+                        <div v-for="(item,index) in group">
+                            <div class="group_question">{{item.question}}</div>
+                            <img
+                                :src="item.pictures[0].fileName"
+                                alt=""
+                                v-if="item.pictures.length > 0"
+                            />
+                            <div v-for="(op,id) in item.options">
+                                <div class="check_blk">
+                                    <input
+                                        class="correct"
+                                        type="radio"
+                                        :id="'groupCorrect'+index+id"
+                                        :name="'group'+index+id"
+                                        @change="actionCheck"
+                                    />
+                                    <label :for="'groupCorrect'+index+id"
+                                        >正確</label
+                                    >
+                                    <input
+                                        class="wrong"
+                                        type="radio"
+                                        :id="'groupFault'+index+id"
+                                        :name="'group'+index+id"
+                                        @change="actionCheck"
+                                    />
+                                    <label :for="'groupFault'+index+id"
+                                        >有誤</label
+                                    >
+                                    <div class="question_blk">
+                                        <div class="question">
+                                            {{id+1}}.{{op.optionQuestion}}
+                                        </div>
+                                        <div class="trans_title"></div>
+                                        <ul>
+                                            <li
+                                                v-for="(de,indx) in op.optionDetails"
+                                            >
+                                                <span class="answer"
+                                                    >({{de.questionOption}}){{de.optionDetails}}</span
+                                                >
+
+                                                <span class="trans_ans"></span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <textarea
+                                        class="comment_blk"
+                                        placeholder="請填寫錯誤註解"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="boolean_content" v-if="boolean.length > 0">
+                        <h2>是非題</h2>
+                        <ul>
+                            <li v-for="(item, index) in boolean">
+                                <div class="check_blk">
+                                    <input
+                                        class="correct"
+                                        type="radio"
+                                        :id="'booleanCorrect'+index"
+                                        :name="'boolean'+index"
+                                        @change="actionCheck"
+                                    />
+                                    <label :for="'booleanCorrect'+index"
+                                        >正確</label
+                                    >
+                                    <input
+                                        class="wrong"
+                                        type="radio"
+                                        :id="'booleanFault'+index"
+                                        :name="'boolean'+index"
+                                        @change="actionCheck"
+                                    />
+                                    <label :for="'booleanFault'+index"
+                                        >有誤</label
+                                    >
+                                    <div class="question_blk">
+                                        <div class="question">
+                                            {{ index + 1 }}.{{ item.question }}
+                                        </div>
+                                        <div class="trans_title"></div>
+                                        <ul>
+                                            <li>
+                                                <label> 是 </label>
+                                            </li>
+                                            <li>
+                                                <label> 非 </label>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <textarea
+                                        class="comment_blk"
+                                        placeholder="請填寫錯誤註解"
+                                    ></textarea>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="action">
+                        <div
+                            :class="{approve:!hasWrong && canAction}"
+                            @click="approve()"
+                        >
+                            上架
+                        </div>
+                        <div
+                            :class="{denied:hasWrong && canAction}"
+                            @click="denied()"
+                        >
+                            駁回
+                        </div>
+                        <div @click="checkPop = !checkPop">取消</div>
+                    </div>
+                </div>
+            </section>
+            <section id="denied_pop" v-if="deniedPop">
+                <i
+                    class="fa-solid fa-xmark"
+                    @click="deniedPop = !deniedPop"
+                ></i>
+                <div class="pop_wrapper">
+                    <h1 id="test_name">{{testName}}</h1>
+                    <span>題數:{{questionCount}}</span>
+                    <div id="single_content" v-if="single.length > 0">
+                        <h2>單選</h2>
+                        <div v-for="(item,index) in single">
+                            <div class="check_blk">
+                                <input
+                                    class="correct"
+                                    type="radio"
+                                    :id="'singleCorrect'+index"
+                                    :name="'single'+index"
+                                    @change="actionCheck($event)"
+                                />
+                                <label :for="'singleCorrect'+index">正確</label>
+                                <input
+                                    class="wrong"
+                                    type="radio"
+                                    :id="'singleFault'+index"
+                                    :name="'single'+index"
+                                    @change="actionCheck($event)"
+                                />
+                                <label :for="'singleFault'+index">有誤</label>
+                                <div class="question_blk">
+                                    <div class="question">
+                                        {{index+1}}.{{item.options[0].optionQuestion}}
+                                    </div>
+                                    <div class="trans_title"></div>
+                                    <img
+                                        :src="item.pictures[0].fileName"
+                                        alt=""
+                                        v-if="item.pictures.length > 0"
+                                    />
+                                    <ul>
+                                        <li
+                                            v-for="(op,id) in item.options[0].optionDetails"
+                                        >
+                                            <span class="answer">
+                                                ({{op.questionOption}}){{op.optionDetails}}</span
+                                            >
+
+                                            <sapn class="trans_ans"></sapn>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <textarea
+                                    class="comment_blk"
+                                    placeholder="請填寫錯誤註解"
+                                ></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="group_content" v-if="group.length > 0">
+                        <h2>題組</h2>
+                        <div v-for="(item,index) in group">
+                            <div class="group_question">{{item.question}}</div>
+                            <img
+                                :src="item.pictures[0].fileName"
+                                alt=""
+                                v-if="item.pictures.length > 0"
+                            />
+                            <div v-for="(op,id) in item.options">
+                                <div class="check_blk">
+                                    <input
+                                        class="correct"
+                                        type="radio"
+                                        :id="'groupCorrect'+index+id"
+                                        :name="'group'+index+id"
+                                        @change="actionCheck"
+                                    />
+                                    <label :for="'groupCorrect'+index+id"
+                                        >正確</label
+                                    >
+                                    <input
+                                        class="wrong"
+                                        type="radio"
+                                        :id="'groupFault'+index+id"
+                                        :name="'group'+index+id"
+                                        @change="actionCheck"
+                                    />
+                                    <label :for="'groupFault'+index+id"
+                                        >有誤</label
+                                    >
+                                    <div class="question_blk">
+                                        <div class="question">
+                                            {{id+1}}.{{op.optionQuestion}}
+                                        </div>
+                                        <div class="trans_title"></div>
+                                        <ul>
+                                            <li
+                                                v-for="(de,indx) in op.optionDetails"
+                                            >
+                                                <span class="answer"
+                                                    >({{de.questionOption}}){{de.optionDetails}}</span
+                                                >
+
+                                                <span class="trans_ans"></span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <textarea
+                                        class="comment_blk"
+                                        placeholder="請填寫錯誤註解"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="boolean_content" v-if="boolean.length > 0">
+                        <h2>是非題</h2>
+                        <ul>
+                            <li v-for="(item, index) in boolean">
+                                <div class="check_blk">
+                                    <input
+                                        class="correct"
+                                        type="radio"
+                                        :id="'booleanCorrect'+index"
+                                        :name="'boolean'+index"
+                                        @change="actionCheck"
+                                    />
+                                    <label :for="'booleanCorrect'+index"
+                                        >正確</label
+                                    >
+                                    <input
+                                        class="wrong"
+                                        type="radio"
+                                        :id="'booleanFault'+index"
+                                        :name="'boolean'+index"
+                                        @change="actionCheck"
+                                    />
+                                    <label :for="'booleanFault'+index"
+                                        >有誤</label
+                                    >
+                                    <div class="question_blk">
+                                        <div class="question">
+                                            {{ index + 1 }}.{{ item.question }}
+                                        </div>
+                                        <div class="trans_title"></div>
+                                        <ul>
+                                            <li>
+                                                <label> 是 </label>
+                                            </li>
+                                            <li>
+                                                <label> 非 </label>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <textarea
+                                        class="comment_blk"
+                                        placeholder="請填寫錯誤註解"
+                                    ></textarea>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="action">
+                        <div
+                            :class="{denied:hasWrong && canAction}"
+                            @click="approve()"
+                        >
+                            下架
+                        </div>
+                        <div @click="deniedPop = !deniedPop">取消</div>
+                    </div>
+                </div>
+            </section>
+            <div class="confirm_blk" v-if="deletePop.isOpen">
+                <div class="wrapper">
+                    <h2>
+                        確定刪除<br />【{{deletePop.name}}】嗎?<br />刪除後將無法回復
+                    </h2>
+                    <div>
+                        <span @click="deleteTest(1)">取消</span>
+                        <span @click="deleteTest(2)">確認</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="./js/test.js"></script>
+    </body>
+</html>
