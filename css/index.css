@@ -235,10 +235,11 @@ select {
     background-color: #284283;
     color: #fff;
 }
-#exam_list .tab .search {
+#exam_list .select_blk .search {
     display: flex;
+    gap: 0;
 }
-#exam_list .tab .search input {
+#exam_list .select_blk .search input {
     border-radius: 8px 0 0 8px;
     -webkit-border-radius: 8px 0 0 8px;
     -moz-border-radius: 8px 0 0 8px;
@@ -248,9 +249,11 @@ select {
     width: 100px;
     border: 2px solid #ccc;
     outline: none;
+    height: 30px;
 }
-#exam_list .tab .search div {
-    padding: 5px 10px;
+#exam_list .select_blk .search label {
+    padding: 5px;
+    height: 30px;
     display: flex;
     cursor: pointer;
     align-items: center;

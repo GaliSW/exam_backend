@@ -32,10 +32,36 @@ let app = new Vue({
         questionCorrectList: [], //審核題目的array - question
         optionWrongList: [], //審核題目的array - option
         questionWrongList: [], //審核題目的array - question
+        testCount: [], //考試總頁數arr
+        pageCount: 0, // 總頁數區間 每10頁一個區間
+        nowPage: 1,
+        firstPage: 1,
+        lastPage: 10,
+        searchText: "",
     },
     created() {
         this.getExamList(0);
         this.concatName();
+    },
+    watch: {
+        nowPage: function (newValue, oldValue) {
+            if (newValue === 0) {
+                this.nowPage = 1;
+            }
+            if (newValue > this.testCount.length && newValue < this.lastPage) {
+                this.nowPage = this.testCount.length;
+            }
+            if (newValue > this.lastPage && newValue < this.testCount.length) {
+                this.firstPage += 10;
+                this.lastPage += 10;
+            }
+            if (newValue < this.firstPage && newValue !== 0) {
+                this.firstPage -= 10;
+                this.lastPage -= 10;
+            }
+
+            this.getExamList(this.status);
+        },
     },
     methods: {
         concatName() {
@@ -180,14 +206,43 @@ let app = new Vue({
             }
         },
 
-        getExamList(status) {
+        getExamList() {
             $.ajax({
-                url: `https://questionapi-docker.funday.asia:9010/api/Tests?SubjectId=${this.nowSubject}&SemesterId=${this.nowSemester}&PageNumber=1&PageSize=40&ApprovalStatusId=${status}
-        `,
+                url: `https://questionapi-docker.funday.asia:9010/api/Tests?SubjectId=${this.nowSubject}&SemesterId=${this.nowSemester}&PageNumber=${this.nowPage}&PageSize=10&ApprovalStatusId=${this.status}&SearchText=${this.searchText}`,
                 method: "GET",
                 success: function (res) {
                     console.log(res);
                     app.testList = res;
+                    app.getTestCount();
+                },
+            });
+        },
+
+        getTestCount() {
+            $.ajax({
+                url: `https://questionapi-docker.funday.asia:9010/api/Tests/Count?SubjectId=${app.nowSubject}&ApprovalStatusId=${app.status}`,
+                method: "GET",
+                success: function (res) {
+                    app.testCount = [];
+                    let item = Math.ceil(res / 10);
+                    app.pageCount = Math.ceil(item / 10);
+                    for (let i = 0; i < item; i++) {
+                        app.testCount.push(i + 1);
+                    }
+                    console.log(app.testCount);
+                },
+            });
+        },
+
+        search() {
+            const text = document.getElementById("searchText").value;
+            $.ajax({
+                url: `https://questionapi-docker.funday.asia:9010/api/Tests?SubjectId=${this.nowSubject}&SemesterId=${this.nowSemester}&PageNumber=${this.nowPage}&PageSize=10&ApprovalStatusId=${app.status}&SearchText=${text}`,
+                method: "GET",
+                success: function (res) {
+                    console.log(res);
+                    app.testList = res;
+                    app.getTestCount();
                 },
             });
         },
@@ -199,7 +254,7 @@ let app = new Vue({
 
         statusChange(e) {
             this.status = Number(e.target.value);
-            this.getExamList(Number(e.target.value));
+            this.getExamList();
         },
 
         gradeChange(e) {

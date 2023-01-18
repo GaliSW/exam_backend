@@ -227,13 +227,17 @@
                             <option value="0">素養</option>
                         </select>
                     </div>
-                </div>
-                <!-- <div class="tab">
-                    <div class="search">
-                        <input type="text" placeholder="搜尋考卷" />
-                        <div>搜尋</div>
+                    <div class="tab">
+                        <div class="search">
+                            <input
+                                type="text"
+                                placeholder="搜尋考卷"
+                                v-model="searchText"
+                            />
+                            <label @click="getExamList()">搜尋</label>
+                        </div>
                     </div>
-                </div> -->
+                </div>
                 <table class="list">
                     <thead>
                         <tr>
@@ -320,26 +324,31 @@
                         aria-label="Pagination"
                     >
                         <li>
-                            <a href=""><span>First</span></a>
+                            <a href="#" v-if="pageCount >1" @click="nowPage-=10"
+                                ><span>First</span></a
+                            >
                         </li>
                         <li>
-                            <a href=""><span>Previous</span></a>
+                            <a href="#" @click="nowPage -= 1"
+                                ><span>Previous</span></a
+                            >
                         </li>
-                        <li><a href="">1</a></li>
-                        <li><a href="">2</a></li>
-                        <li><a href="">3</a></li>
-                        <li class="current"><a href="">4</a></li>
-                        <li><a href="">5</a></li>
-                        <li><a href="">6</a></li>
-                        <li><a href="">7</a></li>
-                        <li><a href="">8</a></li>
-                        <li><a href="">9</a></li>
-                        <li><a href="">10</a></li>
-                        <li>
-                            <a href=""><span>Next</span></a>
+                        <li
+                            v-for="(item,index) in testCount"
+                            v-if="item >= firstPage && item <= lastPage"
+                            :class="{current:nowPage === index+1}"
+                        >
+                            <a href="#" @click="nowPage = index+1">{{item}}</a>
                         </li>
                         <li>
-                            <a href=""><span>Last</span></a>
+                            <a href="#" @click="nowPage += 1"
+                                ><span>Next</span></a
+                            >
+                        </li>
+                        <li>
+                            <a href="#" v-if="pageCount >1" @click="nowPage+=10"
+                                ><span>Last</span></a
+                            >
                         </li>
                     </ul>
                 </div>
