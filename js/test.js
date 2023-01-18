@@ -26,9 +26,14 @@ let app = new Vue({
         deniedPop: false, //下架視窗
         hasWrong: false, //是否有需訂正的題目
         canAction: false, //是否已審核全部題目，可以進行下一步
+        testId: 0,
+        optionCorrectList: [], //審核題目的array - option
+        questionCorrectList: [], //審核題目的array - question
+        optionWrongList: [], //審核題目的array - option
+        questionWrongList: [], //審核題目的array - question
     },
     created() {
-        this.getExamList(1);
+        this.getExamList(0);
         this.concatName();
     },
     methods: {
@@ -37,27 +42,35 @@ let app = new Vue({
             let chSemester;
             switch (Number(document.getElementById("semester").value)) {
                 case 0:
+                    this.grade = 4;
                     chSemester = "(素養)";
                     break;
                 case 1:
+                    this.grade = 1;
                     chSemester = "(七上)";
                     break;
                 case 2:
+                    this.grade = 1;
                     chSemester = "(七下)";
                     break;
                 case 3:
+                    this.grade = 2;
                     chSemester = "(八上)";
                     break;
                 case 4:
+                    this.grade = 2;
                     chSemester = "(八下)";
                     break;
                 case 5:
+                    this.grade = 3;
                     chSemester = "(九上)";
                     break;
                 case 6:
+                    this.grade = 3;
                     chSemester = "(九下)";
                     break;
                 case 7:
+                    this.grade = 3;
                     chSemester = "(總複習)";
                     break;
                 default:
@@ -145,48 +158,61 @@ let app = new Vue({
                 range;
         },
 
-        getExamList() {
+        transGrade(num) {
+            switch (num) {
+                case 1:
+                    return "國七";
+                case 2:
+                    return "國八";
+                case 3:
+                    return "國九";
+                case 4:
+                    return "不分";
+            }
+        },
+
+        getExamList(status) {
             $.ajax({
-                url: `https://questionapi-docker.funday.asia:9010/api/Tests?SubjectId=${this.nowSubject}&SemesterId=${this.nowSemester}&PageNumber=1&PageSize=20
+                url: `https://questionapi-docker.funday.asia:9010/api/Tests?SubjectId=${this.nowSubject}&SemesterId=${this.nowSemester}&PageNumber=1&PageSize=40&ApprovalStatusId=${status}
         `,
                 method: "GET",
                 success: function (res) {
+                    console.log(res);
                     app.testList = res;
                 },
             });
         },
 
         subjectChange(e) {
-            this.nowSubject = e.target.value;
-            this.getExamList();
+            this.nowSubject = Number(e.target.value);
+            this.getExamList(app.status);
         },
 
         statusChange(e) {
             this.status = Number(e.target.value);
+            this.getExamList(Number(e.target.value));
         },
 
         gradeChange(e) {
             this.nowSemester = e.target.value;
-            this.getExamList();
-            //     $.ajax({
-            //         url: `https://questionapi-docker.funday.asia:9010/api/Tests?SubjectId=${this.nowSubject}&SemesterId=${e.target.value}&PageNumber=1&PageSize=20
-            // `,
-            //         method: "GET",
-            //         success: function (res) {
-            //             app.testList = res;
-            //         },
-            //     });
+            this.getExamList(app.status);
         },
 
         getExamContent(id, status) {
+            app.optionCorrectList = [];
+            app.questionCorrectList = [];
+            app.optionWrongList = [];
+            app.questionWrongList = [];
             app.single = [];
             app.group = [];
             app.boolean = [];
+            app.testId = id;
             $.ajax({
                 url: `https://questionapi-docker.funday.asia:9010/api/Tests/Details/${id}
         `,
                 method: "GET",
                 success: function (res) {
+                    console.log(res);
                     if (res === "") {
                         alert("此考卷尚未有考題");
                         return;
@@ -215,6 +241,9 @@ let app = new Vue({
                             app.checkPop = true;
                             app.canAction = false;
                             app.hasWrong = false;
+                            setTimeout(() => {
+                                app.actionCheck();
+                            }, 1000);
                             break;
                         case 3:
                             app.canAction = false;
@@ -235,6 +264,7 @@ let app = new Vue({
             const totalCount = document.querySelectorAll(
                 "input[type=radio]:checked"
             ).length;
+            console.log(totalCount, this.questionCount);
             const wrongCount =
                 document.querySelectorAll(".wrong:checked").length;
 
@@ -277,6 +307,15 @@ let app = new Vue({
                 item.innerText = "";
                 MathJax.Hub.Queue(["Typeset", MathJax.Hub, render[0]]);
             });
+            const anaList = document.querySelectorAll(".analysis");
+            anaList.forEach((item, index) => {
+                const render =
+                    document.querySelectorAll(".trans_analysis")[index];
+                render.innerText = "";
+                render.append("`" + item.innerText + "`");
+                item.innerText = "";
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, render[0]]);
+            });
         },
 
         createTest() {
@@ -286,7 +325,7 @@ let app = new Vue({
             const type = document.getElementById("test_type").value;
             const source = document.getElementById("source").value;
             const range = document.getElementById("range").value;
-            const grade = document.getElementById("grade").value;
+            const grade = app.grade;
             const time = document.getElementById("time").value;
             if (
                 year == "" ||
@@ -296,7 +335,7 @@ let app = new Vue({
                 source == "" ||
                 range == "" ||
                 time == "" ||
-                grade == ""
+                grade === 0
             ) {
                 alert("請完成必填欄位");
             } else {
@@ -315,21 +354,20 @@ let app = new Vue({
                     dataType: "json",
                     contentType: "application/json;charset=utf-8",
                     success: function (res) {
-                        console.log(res);
+                        const url = "http://127.0.0.1:5579/questions.html";
+                        location.href =
+                            url +
+                            `?testName=${app.testName}&subject=${app.subjectId}&testId=${res.id}&grade=${app.grade}&status=0`;
                     },
                 });
-
-                const url = "http://127.0.0.1:5579/questions.html";
-                location.href =
-                    url + `?testName=${app.testName}&subject=${app.subjectId}`;
             }
         },
 
-        editTest(name, id) {
+        editTest(name, id, grade, status) {
             const url = "http://127.0.0.1:5579/questions.html";
             location.href =
                 url +
-                `?testName=${name}&subject=${app.nowSubject}&testId=${id}`;
+                `?testName=${name}&subject=${app.nowSubject}&testId=${id}&grade=${grade}&status=${status}`;
         },
 
         deleteTest(status, name, id) {
@@ -348,7 +386,310 @@ let app = new Vue({
                     method: "DELETE",
                     success: function () {
                         app.deletePop.isOpen = false;
-                        app.getExamList(app.nowSubject);
+                        setTimeout(() => {
+                            app.getExamList(0);
+                        }, 1000);
+                    },
+                });
+            }
+        },
+
+        approveTest() {
+            if (!app.canAction || app.hasWrong) return;
+            for (let i = 0; i < app.optionCorrectList.length; i++) {
+                const optionJson = JSON.stringify({
+                    id: app.optionCorrectList[i],
+                    approvalStatusId: 2,
+                });
+                $.ajax({
+                    url: "https://questionapi-docker.funday.asia:9010/api/QuestionOptions/ApprovalStatus",
+                    method: "PUT",
+                    data: optionJson,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: function (res) {
+                        // console.log(res);
+                    },
+                });
+                const questionJson = JSON.stringify({
+                    id: app.questionCorrectList[i],
+                    approvalStatusId: 2,
+                });
+                console.log(app.questionCorrectList[i]);
+                $.ajax({
+                    url: "https://questionapi-docker.funday.asia:9010/api/Questions/ApprovalStatus",
+                    method: "PUT",
+                    data: questionJson,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: function (res) {
+                        // console.log(res);
+                    },
+                });
+            }
+
+            const testJson = JSON.stringify({
+                id: app.testId,
+                approvalStatusId: 2,
+            });
+            $.ajax({
+                url: "https://questionapi-docker.funday.asia:9010/api/Tests/UpdateApprovalStatus",
+                method: "PUT",
+                data: testJson,
+                dataType: "json",
+                contentType: "application/json;charset=utf-8",
+                success: async function (res) {
+                    // console.log(res);
+                },
+            });
+            app.checkPop = false;
+            setTimeout(() => {
+                app.status = 2;
+                app.getExamList(2);
+            }, 1000);
+        },
+
+        checkQuestion(status, type, qsId, opId) {
+            switch (type) {
+                case "single":
+                    if (status === 2) {
+                        app.optionCorrectList.push(opId);
+                        app.questionCorrectList.push(qsId);
+                    } else {
+                        app.optionWrongList.push(opId);
+                        app.questionWrongList.push(qsId);
+                    }
+                    break;
+                case "boolean":
+                    if (status === 2) {
+                        app.optionCorrectList.push(opId);
+                        app.questionCorrectList.push(qsId);
+                    } else {
+                        app.optionWrongList.push(opId);
+                        app.questionWrongList.push(qsId);
+                    }
+                    break;
+                case "group":
+                    if (status === 2) {
+                        app.optionCorrectList.push(opId);
+                        app.questionCorrectList.push(qsId);
+                    } else {
+                        app.optionWrongList.push(opId);
+                        app.questionWrongList.push(qsId);
+                    }
+                    break;
+            }
+        },
+
+        rejectTest(status) {
+            if (!app.canAction || !app.hasWrong) return;
+
+            for (let i = 0; i < app.optionCorrectList.length; i++) {
+                //put comments
+                const optionComment = JSON.stringify({
+                    id: app.optionCorrectList[i],
+                    comments: "",
+                });
+                $.ajax({
+                    url: "https://questionapi-docker.funday.asia:9010/api/QuestionOptions/Comment",
+                    method: "PUT",
+                    data: optionComment,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: function (res) {},
+                });
+
+                const optionJson = JSON.stringify({
+                    id: app.optionCorrectList[i],
+                    approvalStatusId: 2,
+                });
+                $.ajax({
+                    url: "https://questionapi-docker.funday.asia:9010/api/QuestionOptions/ApprovalStatus",
+                    method: "PUT",
+                    data: optionJson,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: function (res) {
+                        // console.log(res);
+                    },
+                });
+                const questionJson = JSON.stringify({
+                    id: app.questionCorrectList[i],
+                    approvalStatusId: 2,
+                });
+                $.ajax({
+                    url: "https://questionapi-docker.funday.asia:9010/api/Questions/ApprovalStatus",
+                    method: "PUT",
+                    data: questionJson,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: function (res) {
+                        // console.log(res);
+                    },
+                });
+            }
+
+            for (let i = 0; i < app.optionWrongList.length; i++) {
+                //put comments
+                const opId = app.optionWrongList[i];
+                const comments = document.getElementById(
+                    `comments_${opId}`
+                ).value;
+
+                const optionComment = JSON.stringify({
+                    id: app.optionWrongList[i],
+                    comments: comments,
+                });
+                $.ajax({
+                    url: "https://questionapi-docker.funday.asia:9010/api/QuestionOptions/Comment",
+                    method: "PUT",
+                    data: optionComment,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: function (res) {
+                        console.log(res);
+                    },
+                });
+
+                //put option status
+                const optionJson = JSON.stringify({
+                    id: app.optionWrongList[i],
+                    approvalStatusId: status,
+                });
+                $.ajax({
+                    url: "https://questionapi-docker.funday.asia:9010/api/QuestionOptions/ApprovalStatus",
+                    method: "PUT",
+                    data: optionJson,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: function (res) {
+                        console.log(res, optionJson);
+                    },
+                });
+
+                //put question status
+                const questionJson = JSON.stringify({
+                    id: app.questionWrongList[i],
+                    approvalStatusId: status,
+                });
+                $.ajax({
+                    url: "https://questionapi-docker.funday.asia:9010/api/Questions/ApprovalStatus",
+                    method: "PUT",
+                    data: questionJson,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: function (res) {},
+                });
+            }
+
+            const testJson = JSON.stringify({
+                id: app.testId,
+                approvalStatusId: status,
+            });
+
+            $.ajax({
+                url: "https://questionapi-docker.funday.asia:9010/api/Tests/UpdateApprovalStatus",
+                method: "PUT",
+                data: testJson,
+                dataType: "json",
+                contentType: "application/json;charset=utf-8",
+                success: async function (res) {
+                    // console.log(res);
+                },
+            });
+
+            app.checkPop = false;
+            app.deniedPop = false;
+            setTimeout(() => {
+                app.status = status;
+                app.getExamList(status);
+            }, 1000);
+        },
+
+        copyTest(id, testName, schoolYearId, duration, testTypeId) {
+            //get questions id
+            let qsList = [];
+            $.ajax({
+                url: `https://questionapi-docker.funday.asia:9010/api/Tests/Details/${id}
+        `,
+                method: "GET",
+                success: function (res) {
+                    res.questions.forEach((item) => {
+                        if (item.approvalStatusId === 2) {
+                            qsList.push(item.id);
+                        }
+                    });
+                    console.log(qsList);
+                    changeName();
+                    createNewTest();
+                },
+            });
+
+            // change test name - rejected
+            function changeName() {
+                if (qsList.length === 0) {
+                    alert("此考卷題目皆已下架，無法複製");
+                    return;
+                }
+                const nameJson = JSON.stringify({
+                    id: id,
+                    testName: `${testName}-下架`,
+                });
+                $.ajax({
+                    url: `https://questionapi-docker.funday.asia:9010/api/Tests/UpdateTestName
+                        `,
+                    method: "PUT",
+                    data: nameJson,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: function (res) {
+                        console.log(res);
+                    },
+                });
+            }
+
+            //create test and use same name
+            function createNewTest() {
+                const json = JSON.stringify({
+                    subjectId: app.nowSubject,
+                    testTypeId: testTypeId,
+                    schoolYearId: schoolYearId,
+                    testName: testName,
+                    duration: duration,
+                });
+                $.ajax({
+                    url: `https://questionapi-docker.funday.asia:9010/api/Tests
+                        `,
+                    method: "POST",
+                    data: json,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: function (res) {
+                        qsList.forEach((item) => {
+                            joinQuestionToTest(res.id, item);
+                        });
+                        // const url = "http://127.0.0.1:5579/questions.html";
+                        // location.href =
+                        //     url +
+                        //     `?testName=${app.testName}&subject=${app.subjectId}&testId=${res.id}&grade=${app.grade}&status=0`;
+                    },
+                });
+            }
+
+            function joinQuestionToTest(testId, qsId) {
+                const json = JSON.stringify({
+                    testId: testId,
+                    questionId: qsId,
+                });
+                $.ajax({
+                    url: `https://questionapi-docker.funday.asia:9010/api/TestQuestions
+                        `,
+                    method: "POST",
+                    data: json,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: function (res) {
+                        console.log(res);
                     },
                 });
             }

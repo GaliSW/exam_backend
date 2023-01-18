@@ -28,7 +28,7 @@
     </head>
     <body>
         <div id="app">
-            <section id="question_top">
+            <section id="question_top" v-if="approveStatus !== 1">
                 <h1>{{testName}}</h1>
                 <h2>選擇建立考題之類型</h2>
                 <div>
@@ -45,6 +45,9 @@
             </section>
             <section id="question_list">
                 <h1>題目列表</h1>
+                <a href="./index.html"
+                    ><i class="fa-solid fa-circle-left"></i>回考卷列表</a
+                >
                 <span>總題數:{{questionCount }}</span>
                 <table class="list" v-if="singleList.length>0">
                     <thead class="title">
@@ -56,8 +59,6 @@
                         <tr>
                             <th>編號</th>
                             <th>題目</th>
-                            <th>圖片</th>
-                            <th>解析</th>
                             <th>難易度</th>
                             <th>出版社</th>
                             <th>科目</th>
@@ -66,6 +67,7 @@
                             <th>章節</th>
                             <th>出處</th>
                             <th>編輯</th>
+                            <th>狀態</th>
                         </tr>
                     </thead>
                     <tbody id="list_body">
@@ -73,12 +75,6 @@
                             <td>{{item.id}}</td>
                             <td class="option">
                                 {{item.options[0].optionQuestion}}
-                            </td>
-                            <td>
-                                <img :src="item.pictures[0]" alt="" />
-                            </td>
-                            <td class="answer">
-                                {{item.options[0].optionAnalysis}}
                             </td>
                             <td>{{item.difficulty}}</td>
                             <td>{{publisherTrans(item.publisherId)}}</td>
@@ -93,19 +89,67 @@
                                 </ul>
                             </td>
                             <td>{{item.source}}</td>
-                            <td>
+                            <td v-if="item.approvalStatusId === 1">
                                 <i
                                     class="fa-sharp fa-solid fa-eye"
                                     @click="getQuestionContent(item.id,1,0)"
-                                ></i>
+                                >
+                                    <span>預覽</span></i
+                                >
                                 <i
                                     class="fa-solid fa-pen-to-square"
                                     @click="getQuestionContent(item.id,1,1)"
-                                ></i>
+                                >
+                                    <span>訂正</span></i
+                                >
+                            </td>
+                            <td v-else>
+                                <i
+                                    class="fa-sharp fa-solid fa-eye"
+                                    @click="getQuestionContent(item.id,1,0)"
+                                >
+                                    <span>預覽</span></i
+                                >
+                                <i
+                                    class="fa-solid fa-pen-to-square"
+                                    @click="getQuestionContent(item.id,1,1)"
+                                    v-if="item.approvalStatusId !== 1 && item.approvalStatusId !== 2"
+                                >
+                                    <span>編輯</span></i
+                                >
                                 <i
                                     class="fa-solid fa-trash-can"
                                     @click="deleteQuestion(0,item.id)"
-                                ></i>
+                                    v-if="approveStatus === 0 && item.approvalStatusId !== 2"
+                                >
+                                    <span>刪除</span></i
+                                >
+                            </td>
+                            <td>
+                                <p
+                                    class="not_check"
+                                    v-if="item.approvalStatusId === 0"
+                                >
+                                    待審核
+                                </p>
+                                <p
+                                    class="reject"
+                                    v-if="item.approvalStatusId === 1"
+                                >
+                                    待修正
+                                </p>
+                                <p
+                                    class="approve"
+                                    v-if="item.approvalStatusId === 2"
+                                >
+                                    已審核通過
+                                </p>
+                                <p
+                                    class="denied"
+                                    v-if="item.approvalStatusId === -1"
+                                >
+                                    已下架
+                                </p>
                             </td>
                         </tr>
                     </tbody>
@@ -120,7 +164,6 @@
                         <tr>
                             <th>編號</th>
                             <th>題目</th>
-                            <th>圖片</th>
                             <th>難易度</th>
                             <th>出版社</th>
                             <th>科目</th>
@@ -129,15 +172,13 @@
                             <th>章節</th>
                             <th>出處</th>
                             <th>編輯</th>
+                            <th>狀態</th>
                         </tr>
                     </thead>
                     <tbody id="list_body">
                         <tr v-for="(item,index) in groupList">
                             <td>{{item.id}}</td>
                             <td class="option">{{item.question}}</td>
-                            <td>
-                                <img :src="item.pictures[0]" alt="" />
-                            </td>
                             <td>{{item.difficulty}}</td>
                             <td>{{publisherTrans(item.publisherId)}}</td>
                             <td>{{subject}}</td>
@@ -151,19 +192,74 @@
                                 </ul>
                             </td>
                             <td>{{item.source}}</td>
-                            <td>
+                            <td v-if="item.approvalStatusId === 1">
                                 <i
                                     class="fa-sharp fa-solid fa-eye"
                                     @click="getQuestionContent(item.id,2,0)"
-                                ></i>
+                                >
+                                    <span>預覽</span>
+                                </i>
                                 <i
                                     class="fa-solid fa-pen-to-square"
                                     @click="getQuestionContent(item.id,2,1)"
-                                ></i>
+                                >
+                                    <span>訂正</span></i
+                                >
+                            </td>
+                            <td v-else>
+                                <i
+                                    class="fa-sharp fa-solid fa-eye"
+                                    @click="getQuestionContent(item.id,2,0)"
+                                >
+                                    <span>預覽</span>
+                                </i>
+                                <i
+                                    class="fa-solid fa-pen-to-square"
+                                    @click="getQuestionContent(item.id,2,1)"
+                                    v-if="item.approvalStatusId !== 1 && item.approvalStatusId !== 2"
+                                >
+                                    <span>編輯</span></i
+                                >
+                                <i
+                                    class="fa-solid fa-plus"
+                                    @click="addGroupQuestion(item.id,2)"
+                                    v-if="item.approvalStatusId !== 1 && item.approvalStatusId !== 2"
+                                >
+                                    <span>加題目</span></i
+                                >
                                 <i
                                     class="fa-solid fa-trash-can"
                                     @click="deleteQuestion(0,item.id)"
-                                ></i>
+                                    v-if="approveStatus === 0 && item.approvalStatusId !== 2"
+                                >
+                                    <span>刪除</span></i
+                                >
+                            </td>
+                            <td>
+                                <p
+                                    class="not_check"
+                                    v-if="item.approvalStatusId === 0"
+                                >
+                                    待審核
+                                </p>
+                                <p
+                                    class="reject"
+                                    v-if="item.approvalStatusId === 1"
+                                >
+                                    待修正
+                                </p>
+                                <p
+                                    class="approve"
+                                    v-if="item.approvalStatusId === 2"
+                                >
+                                    已審核通過
+                                </p>
+                                <p
+                                    class="denied"
+                                    v-if="item.approvalStatusId === -1"
+                                >
+                                    已下架
+                                </p>
                             </td>
                         </tr>
                     </tbody>
@@ -178,9 +274,6 @@
                         <tr>
                             <th>編號</th>
                             <th>題目</th>
-                            <th>圖片</th>
-                            <th>解析</th>
-                            <th>知識點</th>
                             <th>難易度</th>
                             <th>出版社</th>
                             <th>科目</th>
@@ -189,41 +282,87 @@
                             <th>章節</th>
                             <th>出處</th>
                             <th>編輯</th>
+                            <th>狀態</th>
                         </tr>
                     </thead>
                     <tbody id="list_body">
                         <tr v-for="(item,index) in booleanList">
                             <td>{{item.id}}</td>
                             <td class="option">{{item.question}}</td>
-                            <td>
-                                <img :src="item.pictures[0]" alt="" />
-                            </td>
-                            <td class="answer">{{item.explanation}}</td>
-                            <td>
-                                <ul>
-                                    <li>{{item.learningPoint}}</li>
-                                </ul>
-                            </td>
                             <td>{{item.difficulty}}</td>
                             <td>{{item.publisherId}}</td>
                             <td>{{subject}}</td>
                             <td>{{item.semesterId}}</td>
                             <td>是非</td>
-                            <td>{{item.chapters[0].chapter}}</td>
-                            <td>{{item.source}}</td>
                             <td>
+                                <ul>
+                                    <li v-for="(el,indx) in item.chapters">
+                                        {{el.chapter}}-{{el.section}}
+                                    </li>
+                                </ul>
+                            </td>
+                            <td>{{item.source}}</td>
+                            <td v-if="item.approvalStatusId === 1">
                                 <i
                                     class="fa-sharp fa-solid fa-eye"
-                                    @click="getQuestionContent(item.id,4,0)"
-                                ></i>
+                                    @click="getQuestionContent(item.id,2,0)"
+                                >
+                                    <span>預覽</span>
+                                </i>
                                 <i
                                     class="fa-solid fa-pen-to-square"
                                     @click="getQuestionContent(item.id,4,1)"
-                                ></i>
+                                >
+                                    <span>訂正</span></i
+                                >
+                            </td>
+                            <td v-else>
+                                <i
+                                    class="fa-sharp fa-solid fa-eye"
+                                    @click="getQuestionContent(item.id,4,0)"
+                                >
+                                    <span>預覽</span></i
+                                >
+                                <i
+                                    class="fa-solid fa-pen-to-square"
+                                    @click="getQuestionContent(item.id,4,1)"
+                                    v-if="item.approvalStatusId !== 1 && item.approvalStatusId !== 2"
+                                >
+                                    <span>編輯</span></i
+                                >
                                 <i
                                     class="fa-solid fa-trash-can"
                                     @click="deleteQuestion(0,item.id)"
-                                ></i>
+                                    v-if="approveStatus === 0 && item.approvalStatusId !== 2"
+                                >
+                                    <span>刪除</span></i
+                                >
+                            </td>
+                            <td>
+                                <p
+                                    class="not_check"
+                                    v-if="item.approvalStatusId === 0"
+                                >
+                                    待審核
+                                </p>
+                                <p
+                                    class="reject"
+                                    v-if="item.approvalStatusId === 1"
+                                >
+                                    待修正
+                                </p>
+                                <p
+                                    class="approve"
+                                    v-if="item.approvalStatusId === 2"
+                                >
+                                    已審核通過
+                                </p>
+                                <p
+                                    class="denied"
+                                    v-if="item.approvalStatusId === -1"
+                                >
+                                    已下架
+                                </p>
                             </td>
                         </tr>
                     </tbody>
@@ -245,11 +384,29 @@
                             <label for="group_img">
                                 <i class="fa-solid fa-image"></i>
                             </label>
-                            <i class="fa-solid fa-language"></i>
+                            <img
+                                :src="questionObj.questionPictures[0].pictureLink"
+                                alt=""
+                                v-if="questionObj.questionPictures.length>0"
+                            />
                         </div>
-                        <textarea v-model="questionObj.question"></textarea>
+                        <textarea v-model="mainQuestion.question"></textarea>
+                        <textarea
+                            v-model="mainQuestion.translation"
+                            placeholder="翻譯 非必填"
+                        ></textarea>
                     </div>
-                    <div class="question_option boolean" v-if="popType === 4">
+                    <div
+                        class="question_option boolean"
+                        v-if="popType === 4"
+                        :class="{reject:questionObj.questionOptions[0].approvalStatusId===1}"
+                    >
+                        <div
+                            class="comments"
+                            v-if="questionObj.questionOptions[0].comments"
+                        >
+                            問題:{{questionObj.questionOptions[0].comments}}
+                        </div>
                         <div class="question_blk">
                             <div>
                                 <span>題目:</span>
@@ -257,14 +414,24 @@
                                     id="question_img"
                                     type="file"
                                     accept="image/jpeg, image/png"
-                                    @change="imgPreview($event)"
+                                    @change="imgPreview($event,2,subQuestion[0].id,0,0)"
                                 />
                                 <label for="question_img">
                                     <i class="fa-solid fa-image"></i>
                                 </label>
-                                <i class="fa-solid fa-language"></i>
+                                <img
+                                    :src="questionObj.questionOptions[0].optionPictures[0].pictureLink"
+                                    alt=""
+                                    v-if="questionObj.questionOptions[0].optionPictures.length>0"
+                                />
                             </div>
-                            <textarea>{{questionObj.question}}</textarea>
+                            <textarea
+                                v-model="subQuestion[0].optionQuestion"
+                            ></textarea>
+                            <textarea
+                                v-model="subQuestion[0].optionTranslation"
+                                placeholder="翻譯 非必填"
+                            ></textarea>
                         </div>
                         <div class="option_blk">
                             <div>
@@ -276,7 +443,9 @@
                             </div>
                             <div>
                                 <span>解析:</span>
-                                <textarea></textarea>
+                                <textarea
+                                    v-model="subQuestion[0].optionAnalysis"
+                                ></textarea>
                             </div>
                         </div>
                         <div class="answer">
@@ -288,6 +457,8 @@
                                         id="a"
                                         name="answer"
                                         value="true"
+                                        :checked="subQuestion[0].optionAnswer === '是'"
+                                        @change="subQuestion[0].optionAnswer ='是'"
                                     />
                                     <label for="a">是</label>
                                 </div>
@@ -297,6 +468,8 @@
                                         id="b"
                                         name="answer"
                                         value="false"
+                                        :checked="subQuestion[0].optionAnswer === '非'"
+                                        @change="subQuestion[0].optionAnswer ='非'"
                                     />
                                     <label for="b">非</label>
                                 </div>
@@ -306,8 +479,18 @@
                     <div
                         class="question_option"
                         v-if="popType !== 4"
-                        v-for="(item,index) in questionObj.questionOptions"
+                        v-for="(item,index) in subQuestion"
+                        :class="{reject:questionObj.questionOptions[index].approvalStatusId === 1}"
                     >
+                        <div
+                            :class="{block:questionObj.questionOptions[index].approvalStatusId === 2}"
+                        ></div>
+                        <div
+                            class="comments"
+                            v-if="questionObj.questionOptions[index].comments"
+                        >
+                            問題:{{questionObj.questionOptions[index].comments}}
+                        </div>
                         <div class="question_blk">
                             <div>
                                 <span>題目:</span>
@@ -315,29 +498,42 @@
                                     :id="'question'+index+'_img'"
                                     type="file"
                                     accept="image/jpeg, image/png"
-                                    @change="imgPreview($event,2,item.id,index)"
+                                    @change="imgPreview($event,2,item.id,index,0)"
                                 />
                                 <label :for="'question'+index+'_img'">
                                     <i class="fa-solid fa-image"></i>
                                 </label>
                                 <i class="fa-solid fa-language"></i>
+                                <img
+                                    :src="questionObj.questionOptions[index].optionPictures[0].pictureLink"
+                                    alt=""
+                                    v-if="questionObj.questionOptions[index].optionPictures.length>0"
+                                />
                             </div>
                             <textarea v-model="item.optionQuestion"></textarea>
-                            <!-- <textarea v-model="testQuestion"></textarea> -->
+                            <textarea
+                                v-model="item.optionTranslation"
+                                placeholder="翻譯 非必填"
+                            ></textarea>
                         </div>
                         <div class="option_blk">
-                            <div v-for="(op,indx) in item.optionDetails">
+                            <div v-for="(op,indx) in options[index]">
                                 <div>
-                                    <span>選項{{op.questionOption}}:</span>
+                                    <span>選項{{op.option}}:</span>
                                     <input
                                         :id="'option'+index+indx +'_img'"
                                         type="file"
                                         accept="image/jpeg, image/png"
-                                        @change="imgPreview($event,indx+3,item.id,index,op.id,indx)"
+                                        @change="imgPreview($event,indx+3,item.id,index,op.option,indx)"
                                     />
                                     <label :for="'option'+index+indx +'_img'">
                                         <i class="fa-solid fa-image"></i>
                                     </label>
+                                    <img
+                                        :src="questionObj.questionOptions[index].optionDetails[indx].optionDetailsPictures[0].pictureLink"
+                                        alt=""
+                                        v-if="questionObj.questionOptions[index].optionDetails[indx].optionDetailsPictures.length>0"
+                                    />
                                 </div>
                                 <textarea v-model="op.optionDetails"></textarea>
                             </div>
@@ -398,7 +594,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="add_question" v-if="popType === 2">
+                    <div class="add_question" v-if="popType === 2 && !isEdit">
                         <span>加題目</span>
                         <i
                             class="fa-solid fa-circle-plus"
@@ -408,34 +604,34 @@
                     <div class="difficult">
                         <span>難易度:</span>
                         <div>
-                            <div @click="questionObj.difficulty = 1">
+                            <div @click="mainQuestion.difficulty = 1">
                                 <i class="fa-solid fa-star"></i>
                             </div>
-                            <div @click="questionObj.difficulty = 2">
+                            <div @click="mainQuestion.difficulty = 2">
                                 <i
                                     class="fa-solid fa-star"
-                                    v-if="questionObj.difficulty>1"
+                                    v-if="mainQuestion.difficulty>1"
                                 ></i>
                                 <i class="fa-regular fa-star" v-else></i>
                             </div>
-                            <div @click="questionObj.difficulty = 3">
+                            <div @click="mainQuestion.difficulty = 3">
                                 <i
                                     class="fa-solid fa-star"
-                                    v-if="questionObj.difficulty>2"
+                                    v-if="mainQuestion.difficulty>2"
                                 ></i>
                                 <i class="fa-regular fa-star" v-else></i>
                             </div>
-                            <div @click="questionObj.difficulty = 4">
+                            <div @click="mainQuestion.difficulty = 4">
                                 <i
                                     class="fa-solid fa-star"
-                                    v-if="questionObj.difficulty>3"
+                                    v-if="mainQuestion.difficulty>3"
                                 ></i>
                                 <i class="fa-regular fa-star" v-else></i>
                             </div>
-                            <div @click="questionObj.difficulty = 5">
+                            <div @click="mainQuestion.difficulty = 5">
                                 <i
                                     class="fa-solid fa-star"
-                                    v-if="questionObj.difficulty>4"
+                                    v-if="mainQuestion.difficulty>4"
                                 ></i>
                                 <i class="fa-regular fa-star" v-else></i>
                             </div>
@@ -450,8 +646,8 @@
                                     id="source_1"
                                     name="source"
                                     value="南一"
-                                    :checked="questionObj.publisherId === 1"
-                                    @change="questionObj.publisherId = 1"
+                                    :checked="mainQuestion.publisherId === 1"
+                                    @change="mainQuestion.publisherId = 1"
                                 />
                                 <label for="source_1">南一</label>
                             </div>
@@ -461,8 +657,8 @@
                                     id="source_2"
                                     name="source"
                                     value="康軒"
-                                    :checked="questionObj.publisherId === 2"
-                                    @change="questionObj.publisherId = 2"
+                                    :checked="mainQuestion.publisherId === 2"
+                                    @change="mainQuestion.publisherId = 2"
                                 />
                                 <label for="source_2">康軒</label>
                             </div>
@@ -472,8 +668,8 @@
                                     id="source_ˇ"
                                     name="source"
                                     value="翰林"
-                                    :checked="questionObj.publisherId === 3"
-                                    @change="questionObj.publisherId = 3"
+                                    :checked="mainQuestion.publisherId === 3"
+                                    @change="mainQuestion.publisherId = 3"
                                 />
                                 <label for="source_ˇ">翰林</label>
                             </div>
@@ -483,8 +679,8 @@
                                     id="source_4"
                                     name="source"
                                     value="自編"
-                                    :checked="questionObj.publisherId === 4"
-                                    @change="questionObj.publisherId = 4"
+                                    :checked="mainQuestion.publisherId === 4"
+                                    @change="mainQuestion.publisherId = 4"
                                 />
                                 <label for="source_4">自編</label>
                             </div>
@@ -493,91 +689,91 @@
                     <div class="source">
                         <span>冊別:</span>
                         <div>
-                            <div>
+                            <div v-if="grade === 4">
                                 <input
                                     type="radio"
                                     id="semester_0"
                                     name="semester"
                                     value="0"
-                                    :checked="questionObj.semesterId === 0"
-                                    @change="questionObj.semesterId = 0"
+                                    :checked="mainQuestion.semesterId === 0"
+                                    @change="mainQuestion.semesterId = 0"
                                 />
                                 <label for="semester_0">不分</label>
                             </div>
-                            <div>
+                            <div v-if="grade === 1">
                                 <input
                                     type="radio"
                                     id="semester_1"
                                     name="semester"
                                     value="1"
-                                    :checked="questionObj.semesterId === 1"
-                                    @change="questionObj.semesterId = 1"
+                                    :checked="mainQuestion.semesterId === 1"
+                                    @change="mainQuestion.semesterId = 1"
                                 />
                                 <label for="semester_1">第一冊</label>
                             </div>
-                            <div>
+                            <div v-if="grade === 1">
                                 <input
                                     type="radio"
                                     id="semester_2"
                                     name="semester"
                                     value="2"
-                                    :checked="questionObj.semesterId === 2"
-                                    @change="questionObj.semesterId = 2"
+                                    :checked="mainQuestion.semesterId === 2"
+                                    @change="mainQuestion.semesterId = 2"
                                 />
                                 <label for="semester_2">第二冊</label>
                             </div>
-                            <div>
+                            <div v-if="grade === 2">
                                 <input
                                     type="radio"
                                     id="semester_3"
                                     name="semester"
                                     value="3"
-                                    :checked="questionObj.semesterId === 3"
-                                    @change="questionObj.semesterId = 3"
+                                    :checked="mainQuestion.semesterId === 3"
+                                    @change="mainQuestion.semesterId = 3"
                                 />
                                 <label for="semester_3">第三冊</label>
                             </div>
-                            <div>
+                            <div v-if="grade === 2">
                                 <input
                                     type="radio"
                                     id="semester_4"
                                     name="semester"
                                     value="4"
-                                    :checked="questionObj.semesterId === 4"
-                                    @change="questionObj.semesterId = 4"
+                                    :checked="mainQuestion.semesterId === 4"
+                                    @change="mainQuestion.semesterId = 4"
                                 />
                                 <label for="semester_4">第四冊</label>
                             </div>
-                            <div>
+                            <div v-if="grade === 3">
                                 <input
                                     type="radio"
                                     id="semester_5"
                                     name="semester"
                                     value="5"
-                                    :checked="questionObj.semesterId === 5"
-                                    @change="questionObj.semesterId = 5"
+                                    :checked="mainQuestion.semesterId === 5"
+                                    @change="mainQuestion.semesterId = 5"
                                 />
                                 <label for="semester_5">第五冊</label>
                             </div>
-                            <div>
+                            <div v-if="grade === 3">
                                 <input
                                     type="radio"
                                     id="semester_6"
                                     name="semester"
                                     value="6"
-                                    :checked="questionObj.semesterId === 6"
-                                    @change="questionObj.semesterId = 6"
+                                    :checked="mainQuestion.semesterId === 6"
+                                    @change="mainQuestion.semesterId = 6"
                                 />
                                 <label for="semester_6">第六冊</label>
                             </div>
-                            <div>
+                            <div v-if="grade === 3">
                                 <input
                                     type="radio"
                                     id="semester_7"
                                     name="semester"
                                     value="7"
-                                    :checked="questionObj.semesterId === 7"
-                                    @change="questionObj.semesterId = 7"
+                                    :checked="mainQuestion.semesterId === 7"
+                                    @change="mainQuestion.semesterId = 7"
                                 />
                                 <label for="semester_7">第七冊</label>
                             </div>
@@ -588,7 +784,7 @@
                         <div id="chapter_list">
                             <div
                                 class="chapter_item"
-                                v-for="(item,index) in questionObj.questionChapters"
+                                v-for="(item,index) in chapters"
                             >
                                 <input
                                     type="text"
@@ -617,7 +813,7 @@
                         <div>
                             <label for="points" id="learningPoints">
                                 <div
-                                    v-for="(item,index) in  questionObj.learningPoints"
+                                    v-for="(item,index) in learningPoints"
                                     @click.stop="removePoint(index)"
                                 >
                                     <i class="fa-sharp fa-solid fa-xmark"></i>
@@ -646,7 +842,7 @@
                         <input
                             type="text"
                             id="comeFrom"
-                            v-model="questionObj.source"
+                            v-model=" mainQuestion.source"
                         />
                     </div>
                     <div class="literacy">
@@ -658,8 +854,8 @@
                                     id="literacy_1"
                                     name="literacy"
                                     value="true"
-                                    :checked="questionObj.素養題 === true"
-                                    @change="questionObj.素養題 = true"
+                                    :checked=" mainQuestion.素養題 === true"
+                                    @change=" mainQuestion.素養題 = true"
                                 />
                                 <label for="literacy_1">是</label>
                             </div>
@@ -669,8 +865,8 @@
                                     id="literacy_2"
                                     name="literacy"
                                     value="false"
-                                    :checked="questionObj.素養題 === false"
-                                    @change="questionObj.素養題 = false"
+                                    :checked=" mainQuestion.素養題 === false"
+                                    @change=" mainQuestion.素養題 = false"
                                 />
                                 <label for="literacy_2">否</label>
                             </div>
@@ -683,6 +879,126 @@
                     </div>
                 </div>
             </section>
+            <section id="recheck" v-if="approveStatus === 1">
+                <div @click="recheck()">重新審核</div>
+            </section>
+            <section id="add_question_pop" v-if="addPop">
+                <i
+                    class="fa-sharp fa-solid fa-xmark"
+                    @click="addPop = false"
+                ></i>
+                <div class="pop_content">
+                    <h2>{{popTitle}}</h2>
+                    <div
+                        class="question_option"
+                        v-if="popType !== 4"
+                        v-for="(item,index) in subQuestion"
+                    >
+                        <div class="question_blk">
+                            <div>
+                                <span>題目:</span>
+                                <input
+                                    :id="'question'+index+'_img'"
+                                    type="file"
+                                    accept="image/jpeg, image/png"
+                                    @change="imgPreview($event,2,item.id,index,0)"
+                                />
+                                <label :for="'question'+index+'_img'">
+                                    <i class="fa-solid fa-image"></i>
+                                </label>
+                                <i class="fa-solid fa-language"></i>
+                                <img
+                                    :src="questionObj.questionOptions[index].optionPictures[0].pictureLink"
+                                    alt=""
+                                    v-if="questionObj.questionOptions[index].optionPictures.length>0"
+                                />
+                            </div>
+                            <textarea v-model="item.optionQuestion"></textarea>
+                        </div>
+                        <div class="option_blk">
+                            <div v-for="(op,indx) in options[index]">
+                                <div>
+                                    <span>選項{{op.option}}:</span>
+                                    <input
+                                        :id="'option'+index+indx +'_img'"
+                                        type="file"
+                                        accept="image/jpeg, image/png"
+                                        @change="imgPreview($event,indx+3,item.id,index,op.option,indx)"
+                                    />
+                                    <label :for="'option'+index+indx +'_img'">
+                                        <i class="fa-solid fa-image"></i>
+                                    </label>
+                                    <img
+                                        :src="questionObj.questionOptions[index].optionDetails[indx].optionDetailsPictures[0].pictureLink"
+                                        alt=""
+                                        v-if="questionObj.questionOptions[index].optionDetails[indx].optionDetailsPictures.length>0"
+                                    />
+                                </div>
+                                <textarea v-model="op.optionDetails"></textarea>
+                            </div>
+                            <div>
+                                <span>解析:</span>
+                                <textarea
+                                    v-model="item.optionAnalysis"
+                                ></textarea>
+                            </div>
+                        </div>
+                        <div class="answer">
+                            <span>答案:</span>
+                            <div>
+                                <div>
+                                    <input
+                                        type="radio"
+                                        :id="index+'a'"
+                                        :name="'answer'+index"
+                                        value="1"
+                                        :checked="item.optionAnswer === 'A'"
+                                        @change="item.optionAnswer ='A'"
+                                    />
+                                    <label :for="index + 'a'">A</label>
+                                </div>
+                                <div>
+                                    <input
+                                        type="radio"
+                                        :id="index+'b'"
+                                        :name="'answer'+index"
+                                        value="2"
+                                        :checked="item.optionAnswer === 'B'"
+                                        @change="item.optionAnswer = 'B'"
+                                    />
+                                    <label :for="index + 'b'">B</label>
+                                </div>
+                                <div>
+                                    <input
+                                        type="radio"
+                                        :id="index+'c'"
+                                        :name="'answer'+index"
+                                        value="3"
+                                        :checked="item.optionAnswer === 'C'"
+                                        @change="item.optionAnswer = 'C'"
+                                    />
+                                    <label :for="index + 'c'">C</label>
+                                </div>
+                                <div>
+                                    <input
+                                        type="radio"
+                                        :id="index+'d'"
+                                        :name="'answer'+index"
+                                        value="4"
+                                        :checked="item.optionAnswer === 'D'"
+                                        @change="item.optionAnswer = 'D'"
+                                    />
+                                    <label :for="index + 'd'">D</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action">
+                        <div @click="addPop = !addPop">取消</div>
+                        <div @click="saveQuestion(3)">建立</div>
+                    </div>
+                </div>
+            </section>
             <section id="question_info" v-if="infoPop">
                 <i
                     class="fa-sharp fa-solid fa-xmark"
@@ -691,12 +1007,21 @@
                 <div class="wrapper">
                     <div v-if="questionObj.questionTypeId === 1">
                         <h2>{{questionObj.question}}</h2>
-                        <img :src="questionObj.pictures[0]" alt="" />
+                        <img
+                            :src="questionObj.questionOptions[0].optionPictures[0].pictureLink"
+                            alt=""
+                            v-if="questionObj.questionOptions[0].optionPictures.length>0"
+                        />
                         <ul>
                             <li
                                 v-for="(item,index) in questionObj.questionOptions[0].optionDetails"
                             >
                                 ({{item.option}}){{item.optionDetails}}
+                                <img
+                                    :src="questionObj.questionOptions[0].optionDetails[index].optionDetailsPictures[0].pictureLink"
+                                    alt=""
+                                    v-if="questionObj.questionOptions[0].optionDetails[index].optionDetailsPictures.length>0"
+                                />
                             </li>
                         </ul>
                         <div class="analysis">
@@ -705,14 +1030,28 @@
                     </div>
                     <div v-if="questionObj.questionTypeId === 2">
                         <h1>{{questionObj.question}}</h1>
-                        <img :src="questionObj.pictures[0]" alt="" />
+                        <img
+                            :src="questionObj.questionPictures[0].pictureLink"
+                            alt=""
+                            v-if="questionObj.questionPictures.length>0"
+                        />
                         <div
                             v-for="(item,index) in questionObj.questionOptions"
                         >
                             <h2>{{index+1}}.{{item.optionQuestion}}</h2>
+                            <img
+                                :src="questionObj.questionOptions[index].optionPictures[0].pictureLink"
+                                alt=""
+                                v-if="questionObj.questionOptions[index].optionPictures>0"
+                            />
                             <ul>
                                 <li v-for="(op,id) in item.optionDetails">
                                     ({{op.option}}){{op.optionDetails}}
+                                    <img
+                                        :src="questionObj.questionOptions[index].optionDetails[id].optionDetailsPictures[0].pictureLink"
+                                        alt=""
+                                        v-if="questionObj.questionOptions[index].optionDetails[id].optionDetailsPictures.length>0"
+                                    />
                                 </li>
                             </ul>
                             <div class="analysis">{{item.optionAnalysis}}</div>
@@ -720,12 +1059,18 @@
                     </div>
                     <div v-if="questionObj.questionTypeId === 4">
                         <h2>{{questionObj.question}}</h2>
-                        <img :src="questionObj.pictures[0]" alt="" />
+                        <img
+                            :src="questionObj.questionOptions[0].optionPictures[0].pictureLink"
+                            alt=""
+                            v-if="questionObj.questionOptions[0].optionPictures.length>0"
+                        />
                         <ul>
                             <li>是</li>
                             <li>非</li>
                         </ul>
-                        <div>{{questionObj.explanation}}</div>
+                        <div class="analysis">
+                            {{questionObj.questionOptions[0].optionAnalysis}}
+                        </div>
                     </div>
                 </div>
             </section>

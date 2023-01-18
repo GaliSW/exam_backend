@@ -4,10 +4,15 @@ let app = new Vue({
         pop: false,
         isEdit: false,
         infoPop: false,
+        addPop: false,
         popType: 0,
         popTitle: "單選題",
         testName: "",
+        subjectId: 0,
+        testId: 0,
         subject: "",
+        grade: 0,
+        approveStatus: 0,
         learningList: false,
         learningPointsList: [],
         chooseLearningPoints: [],
@@ -24,16 +29,99 @@ let app = new Vue({
             id: 0,
         },
         testQuestion: "",
+        imgNameList: [], //圖檔名稱
+        mainQuestion: {
+            question: "",
+            answer: "",
+            explanation: "",
+            difficulty: 0,
+            publisherId: 0,
+            subjectId: 0,
+            semesterId: 0,
+            questionTypeId: 0,
+            comments: "",
+            source: "",
+            素養題: false,
+            mediaFolder: "",
+            translation: "",
+            approvalStatusId: 0,
+        },
+        subQuestion: [
+            {
+                questionId: 0,
+                optionAnalysis: "",
+                optionNumber: 1,
+                option: "",
+                optionAnswer: "",
+                optionQuestion: "",
+                optionTranslation: "",
+                approvalStatusId: 0,
+                comments: "",
+            },
+        ],
+        options: [
+            [
+                {
+                    questionOptionId: 0,
+                    optionDetails: "",
+                    optionDetailAnalysis: "",
+                    option: "A",
+                },
+                {
+                    questionOptionId: 0,
+                    optionDetails: "",
+                    optionDetailAnalysis: "",
+                    option: "B",
+                },
+                {
+                    questionOptionId: 0,
+                    optionDetails: "",
+                    optionDetailAnalysis: "",
+                    option: "C",
+                },
+                {
+                    questionOptionId: 0,
+                    optionDetails: "",
+                    optionDetailAnalysis: "",
+                    option: "D",
+                },
+            ],
+        ],
+        booleanOption: [
+            [
+                {
+                    questionOptionId: 0,
+                    optionDetails: "",
+                    optionDetailAnalysis: "",
+                    option: "是",
+                },
+                {
+                    questionOptionId: 0,
+                    optionDetails: "",
+                    optionDetailAnalysis: "",
+                    option: "非",
+                },
+            ],
+        ],
+        mainPictures: [],
+        subPictures: [],
+        optionPictures: [],
+        chapters: [],
+        learningPoints: [],
+        questionId: 0,
     },
     created() {
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
         const name = urlParams.get("testName");
-        const subject = Number(urlParams.get("subject"));
+        this.subjectId = Number(urlParams.get("subject"));
         const testId = urlParams.get("testId");
+        this.grade = Number(urlParams.get("grade"));
+        this.approveStatus = Number(urlParams.get("status"));
+        console.log(this.grade);
         this.testName = name;
-        this.subject = this.subjectTrans(subject);
-        this.getLearningPoints(subject);
+        this.subject = this.subjectTrans(this.subjectId);
+        this.getLearningPoints(this.subjectId);
         if (testId) {
             this.testId = testId;
             this.getExamContent(testId);
@@ -62,10 +150,12 @@ let app = new Vue({
         create(type) {
             this.isEdit = false;
             this.initQuestionObj(type);
+            this.initQuestion(type);
             this.pop = true;
             this.popType = type;
         },
 
+        //for empty form
         initQuestionObj(type) {
             this.questionObj = {
                 approvalStatusId: 0,
@@ -179,6 +269,71 @@ let app = new Vue({
             };
         },
 
+        //for object store
+        initQuestion(type) {
+            app.mainQuestion = {
+                question: "",
+                answer: "",
+                explanation: "",
+                difficulty: 0,
+                publisherId: 0,
+                subjectId: app.subjectId,
+                semesterId: 0,
+                questionTypeId: type,
+                comments: "",
+                source: "",
+                素養題: false,
+                mediaFolder: "",
+                translation: "",
+                approvalStatusId: 0,
+            };
+            app.subQuestion = [
+                {
+                    questionId: 0,
+                    optionAnalysis: "",
+                    optionNumber: 1,
+                    option: "",
+                    optionAnswer: "",
+                    optionQuestion: "",
+                    optionTranslation: "",
+                    approvalStatusId: 0,
+                    comments: "",
+                },
+            ];
+            app.options = [
+                [
+                    {
+                        questionOptionId: 0,
+                        optionDetails: "",
+                        optionDetailAnalysis: "",
+                        option: "A",
+                    },
+                    {
+                        questionOptionId: 0,
+                        optionDetails: "",
+                        optionDetailAnalysis: "",
+                        option: "B",
+                    },
+                    {
+                        questionOptionId: 0,
+                        optionDetails: "",
+                        optionDetailAnalysis: "",
+                        option: "C",
+                    },
+                    {
+                        questionOptionId: 0,
+                        optionDetails: "",
+                        optionDetailAnalysis: "",
+                        option: "D",
+                    },
+                ],
+            ];
+            app.chapters = [];
+            app.learningPoints = [];
+            app.subPictures = [[]];
+            app.optionPictures = [[]];
+        },
+
         imgPreview(e, typeId, opId, index, deId, deIndex) {
             this.createImgObj(e, typeId, opId, index, deId, deIndex);
             const blk = e.target.parentNode;
@@ -204,77 +359,204 @@ let app = new Vue({
         createImgObj(e, typeId, opId, index, deId, deIndex) {
             let pictureObj = {
                 questionId: 0,
-                optionId: 0,
                 questionOptionId: 0,
                 questionOptionDetailId: 0,
                 questionPictureTypeId: 0,
                 optionNumber: 0,
                 fileName: e.target.files[0].name,
-                createAt: new Date().toISOString(),
-                purpose: "",
-                createBy: "",
-                photoBytes: "",
-                questionGuid: "",
-                questionOptionGuid: "",
-                questionOptionDetailGuid: "",
+                files: e.target.files[0],
             };
+            console.log(pictureObj);
             switch (typeId) {
-                case 1:
-                    app.questionObj.pictures = [];
+                case 1: //main
                     pictureObj.questionPictureTypeId = typeId;
-                    pictureObj.questionId = app.questionObj.id;
-                    if (!app.isEdit) {
-                        pictureObj.questionGuid = app.createGuid();
+                    pictureObj.questionId = app.mainQuestion.id;
+                    app.mainPictures = [];
+                    app.mainPicturesFiles = [];
+                    app.mainPictures.push(pictureObj);
+                    if (app.isEdit) {
+                        app.putPictures(pictureObj, app.mainQuestion.id, 1);
                     }
-                    app.questionObj.pictures.push(pictureObj);
                     break;
-                case 2:
-                    app.questionObj.questionOptions[index].optionPictures = [];
+                case 2: //sub
                     pictureObj.questionPictureTypeId = typeId;
-                    pictureObj.questionId = app.questionObj.id;
-                    pictureObj.optionId = opId;
+                    pictureObj.questionId = app.mainQuestion.id;
+                    pictureObj.questionOptionId = opId;
                     pictureObj.optionNumber = index + 1; //1 2 3 4
-                    if (!app.isEdit) {
-                        pictureObj.questionOptionGuid = app.createGuid();
+                    let subIndex = app.subPictures.findIndex((el) => {
+                        return el.optionNumber == index + 1;
+                    });
+                    if (subIndex > -1) {
+                        app.subPictures[index].splice(subIndex, 1);
                     }
-                    app.questionObj.questionOptions[index].optionPictures.push(
-                        pictureObj
-                    );
+                    app.subPictures[index].push(pictureObj);
+                    console.log(pictureObj);
+                    if (app.isEdit) {
+                        app.putPictures(
+                            pictureObj,
+                            app.mainQuestion.id,
+                            2,
+                            index
+                        );
+                    }
                     break;
-                default: //3 4 5 6
-                    app.questionObj.questionOptions[index].optionDetails[
-                        deIndex
-                    ].optionDetailsPictures = [];
+                default: //3 4 5 6 details
                     pictureObj.questionPictureTypeId = typeId;
-                    pictureObj.questionId = app.questionObj.id;
-                    pictureObj.optionId = opId;
-                    pictureObj.questionOptionDetailId = deId;
-                    pictureObj.optionNumber = index + 1;
-                    pictureObj.optionNumber = typeId - 2;
-                    if (!app.isEdit) {
-                        pictureObj.questionOptionDetailGuid = app.createGuid();
+                    pictureObj.questionId = app.mainQuestion.id;
+                    pictureObj.questionOptionId = opId;
+                    pictureObj.questionOptionDetailId = index + 1;
+                    pictureObj.optionNumber = deIndex + 1;
+                    let optionIndex = app.optionPictures[index].findIndex(
+                        (el) => {
+                            return (
+                                el.questionOptionDetailId == index + 1 &&
+                                el.optionNumber == deIndex + 1
+                            );
+                        }
+                    );
+                    if (optionIndex > -1) {
+                        app.optionPictures[index].splice(optionIndex, 1);
                     }
-                    app.questionObj.questionOptions[index].optionDetails[
-                        deIndex
-                    ].optionDetailsPictures.push(pictureObj);
+                    app.optionPictures[index].push(pictureObj);
+                    if (app.isEdit) {
+                        app.putPictures(
+                            pictureObj,
+                            app.mainQuestion.id,
+                            3,
+                            index,
+                            deIndex
+                        );
+                    }
+                    console.log(pictureObj);
             }
+        },
+
+        //edit pictures
+        putPictures(item, qsId, type, opIndex, deIndex) {
+            return new Promise((resolve, reject) => {
+                // if (app.questionObj.questionPictures[0] == undefined) {
+                //     uploadFiles();
+                // } else {
+                //     item.id = app.questionObj.questionPictures[0].id;
+                //     // delete original file
+                //     $.ajax({
+                //         url: `https://questionapi-docker.funday.asia:9010/api/Files/${item.id}`,
+                //         method: "DELETE",
+                //         success: function (res) {
+                //             console.log(res, item);
+                //         },
+                //     });
+                // }
+                switch (type) {
+                    case 1:
+                        if (app.questionObj.questionPictures[0] == undefined) {
+                            item.id = 0;
+                            console.log("1");
+                            uploadFiles();
+                        } else {
+                            item.id = app.questionObj.questionPictures[0].id;
+                            console.log("2");
+                            uploadFiles();
+                        }
+                        break;
+                    case 2:
+                        if (
+                            app.questionObj.questionOptions[opIndex]
+                                .optionPictures[0] == undefined
+                        ) {
+                            item.id = 0;
+                            uploadFiles();
+                        } else {
+                            item.id =
+                                app.questionObj.questionOptions[
+                                    opIndex
+                                ].optionPictures[0].id;
+                            uploadFiles();
+                        }
+                        break;
+                    case 3:
+                        if (
+                            app.questionObj.questionOptions[opIndex]
+                                .optionDetails[deIndex]
+                                .optionDetailsPictures[0] == undefined
+                        ) {
+                            item.questionOptionDetailId =
+                                app.questionObj.questionOptions[
+                                    opIndex
+                                ].optionDetails[deIndex].id;
+                            item.id = 0;
+                            uploadFiles();
+                        } else {
+                            item.id =
+                                app.questionObj.questionOptions[
+                                    opIndex
+                                ].optionDetails[
+                                    deIndex
+                                ].optionDetailsPictures[0].id;
+                            item.questionOptionDetailId =
+                                app.questionObj.questionOptions[
+                                    opIndex
+                                ].optionDetails[deIndex].id;
+                            uploadFiles();
+                        }
+                        break;
+                }
+
+                //uploadFiles
+                function uploadFiles() {
+                    const formData = new FormData();
+                    formData.append("file", item.files);
+                    console.log(item.fileName);
+                    $.ajax({
+                        url: `https://questionapi-docker.funday.asia:9010/api/Files?folderName=${qsId}&fileName=${item.fileName}`,
+                        method: "POST",
+                        processData: false,
+                        contentType: false,
+                        dataType: "json",
+                        data: formData,
+                        success: function (res) {
+                            console.log(res);
+                            postFileName();
+                        },
+                    });
+                }
+
+                // put fileName
+                function postFileName() {
+                    delete item["files"];
+                    const name = `${qsId}/${item.fileName}`;
+                    item.fileName = name;
+                    console.log(item.fileName);
+                    // item.id = app.questionObj.questionPictures[0].id;
+                    const json = JSON.stringify(item);
+                    $.ajax({
+                        url: "https://questionapi-docker.funday.asia:9010/api/QuestionPictures",
+                        method: "PUT",
+                        data: json,
+                        dataType: "json",
+                        contentType: "application/json;charset=utf-8",
+                        success: function (res) {
+                            console.log(res, item);
+                            resolve();
+                        },
+                    });
+                }
+            });
         },
 
         addChapter(id) {
             if (document.querySelectorAll(".chapter_item").length >= 3) return;
-            app.questionObj.questionChapters.push({
+            app.chapters.push({
+                questionId: 0,
                 chapter: 0,
-                questionId: id,
                 section: 0,
-                updateAt: null,
-                updateBy: null,
             });
         },
 
         removeChapter(e) {
             const item = document.querySelector(".chapter_item");
             if (item) {
-                app.questionObj.questionChapters.pop();
+                app.chapters.pop();
             } else {
                 return;
             }
@@ -323,6 +605,7 @@ let app = new Vue({
         `,
                 method: "GET",
                 success: function (res) {
+                    console.log(res);
                     if (res === "") return;
                     const list = res.questions;
                     app.questionCount = res.questionCount;
@@ -344,11 +627,11 @@ let app = new Vue({
         },
 
         addPoint(text, id) {
-            if (app.questionObj.learningPoints.length > 4) {
+            if (app.learningPoints.length > 4) {
                 app.learningList = false;
                 return;
-            } else if (app.questionObj.learningPoints.length > 0) {
-                const arr = app.questionObj.learningPoints;
+            } else if (app.learningPoints.length > 0) {
+                const arr = app.learningPoints;
                 const result = arr.find(
                     ({ learningPointId }) => learningPointId === id
                 );
@@ -359,18 +642,17 @@ let app = new Vue({
             }
 
             const obj = {
-                id: 0,
-                learningPoint: text,
+                questionId: 0,
                 learningPointId: id,
-                questionId: app.questionObj.id,
+                learningPoint: text,
             };
-            app.questionObj.learningPoints.push(obj);
+            app.learningPoints.push(obj);
             document.getElementById("points").value = "";
             app.learningList = false;
         },
 
         removePoint(index) {
-            app.questionObj.learningPoints.splice(index, 1);
+            app.learningPoints.splice(index, 1);
         },
 
         addQuestion() {
@@ -422,57 +704,150 @@ let app = new Vue({
                     },
                 ],
             });
+            app.subQuestion.push({
+                questionId: 0,
+                optionAnalysis: "",
+                optionNumber: length + 1,
+                option: "",
+                optionAnswer: "",
+                optionQuestion: "",
+                optionTranslation: "",
+                approvalStatusId: 0,
+                comments: "",
+            });
+            app.options.push([
+                {
+                    questionOptionId: 0,
+                    optionDetails: "",
+                    optionDetailAnalysis: "",
+                    option: "A",
+                },
+                {
+                    questionOptionId: 0,
+                    optionDetails: "",
+                    optionDetailAnalysis: "",
+                    option: "B",
+                },
+                {
+                    questionOptionId: 0,
+                    optionDetails: "",
+                    optionDetailAnalysis: "",
+                    option: "C",
+                },
+                {
+                    questionOptionId: 0,
+                    optionDetails: "",
+                    optionDetailAnalysis: "",
+                    option: "D",
+                },
+            ]);
+            app.subPictures.push([]);
+            app.optionPictures.push([]);
         },
 
-        getQuestionContent(id, type, status) {
-            this.questionObj = {};
-
+        addGroupQuestion(id, type) {
             $.ajax({
                 url: `https://questionapi-docker.funday.asia:9010/api/Questions/toEdit/${id}
                 `,
                 method: "GET",
-                success: function (res) {
-                    app.questionObj = res;
+                success: async function (res) {
+                    console.log(res);
+                    app.isEdit = false;
+                    app.initQuestionObj(type);
+                    app.initQuestion(type);
+                    app.addPop = true;
+                    app.popType = type;
+                    app.subQuestion[0].optionNumber =
+                        res.questionOptions.length + 1;
+                    app.subQuestion[0].questionId = id;
+                    app.questionId = id;
+                    console.log(app.subQuestion, app.options);
                 },
             });
-            if (status === 0) {
-                app.infoPop = true;
-            } else {
-                this.isEdit = true;
-                app.popType = type;
-                app.pop = true;
-            }
         },
 
-        saveQuestion(status) {
-            const json = JSON.stringify(app.questionObj);
-            console.log(status);
-            if (status === 0) {
-                //更新
-                $.ajax({
-                    url: `https://questionapi-docker.funday.asia:9010/api/Questions/${app.questionObj.id}
-                        `,
-                    method: "PUT",
-                    data: json,
-                    dataType: "json",
-                    contentType: "application/json;charset=utf-8",
-                });
-                app.getExamContent(app.testId);
-                app.pop = false;
-            } else {
-                $.ajax({
-                    url: `https://questionapi-docker.funday.asia:9010/api/Questions
-                        `,
-                    method: "POST",
-                    data: json,
-                    dataType: "json",
-                    contentType: "application/json;charset=utf-8",
-                    success: function (res) {
-                        console.log(res);
-                        app.setQuestionToTest(res.id);
-                    },
-                });
-            }
+        getQuestionContent(id, type, status) {
+            this.questionObj = {};
+            this.initQuestion();
+            $.ajax({
+                url: `https://questionapi-docker.funday.asia:9010/api/Questions/toEdit/${id}
+                `,
+                method: "GET",
+                success: async function (res) {
+                    console.log(res);
+                    app.questionObj = res; // question info
+                    //edit question
+                    app.mainQuestion = {
+                        id: res.id,
+                        question: res.question,
+                        answer: res.answer,
+                        explanation: res.explanation,
+                        difficulty: res.difficulty,
+                        publisherId: res.publisherId,
+                        subjectId: res.subjectId,
+                        semesterId: res.semesterId,
+                        questionTypeId: res.questionTypeId,
+                        comments: res.comments,
+                        source: res.source,
+                        素養題: res.素養題,
+                        mediaFolder: res.mediaFolder,
+                        translation: res.translation,
+                        approvalStatusId: res.approvalStatusId,
+                    };
+                    app.subQuestion = [];
+                    app.options = [];
+                    res.questionOptions.forEach((item, index) => {
+                        app.subQuestion.push({
+                            id: item.id,
+                            questionId: item.questionId,
+                            optionAnalysis: item.optionAnalysis,
+                            optionNumber: item.optionNumber,
+                            option: item.option,
+                            optionAnswer: item.optionAnswer,
+                            optionQuestion: item.optionQuestion,
+                            optionTranslation: item.optionTranslation,
+                            approvalStatusId: item.approvalStatusId,
+                            comments: item.comments,
+                        });
+                        app.options.push([]);
+                        app.optionPictures.push([]);
+                        item.optionDetails.forEach((ele) => {
+                            app.options[index].push({
+                                id: ele.id,
+                                questionOptionId: ele.questionOptionId,
+                                optionDetails: ele.optionDetails,
+                                optionDetailAnalysis: ele.optionDetailAnalysis,
+                                option: ele.option,
+                            });
+                            // app.optionPictures[index].push([]);
+                        });
+                        app.subPictures.push([]);
+                    });
+                    res.questionChapters.forEach((item) => {
+                        app.chapters.push({
+                            questionId: item.questionId,
+                            chapter: item.chapter,
+                            section: item.section,
+                        });
+                    });
+                    res.learningPoints.forEach((item) => {
+                        app.learningPoints.push({
+                            questionId: item.questionId,
+                            learningPointId: item.learningPointId,
+                            text: item.learningPoint,
+                        });
+                    });
+                    app.chapters = res.questionChapters;
+                    app.learningPoints = res.learningPoints;
+                    if (status === 0) {
+                        app.infoPop = true;
+                    } else {
+                        app.isEdit = true;
+                        app.popType = type;
+                        app.pop = true;
+                    }
+                },
+            });
         },
 
         deleteQuestion(status, id) {
@@ -511,7 +886,6 @@ let app = new Vue({
                 dataType: "json",
                 contentType: "application/json;charset=utf-8",
                 success: function () {
-                    app.getExamContent(app.testId);
                     app.pop = false;
                 },
             });
@@ -569,6 +943,450 @@ let app = new Vue({
                     return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
                 }
             );
+        },
+
+        uploadFile(folderName, fileName) {
+            return new Promise((resolve, reject) => {
+                console.log(folderName);
+                resolve();
+            });
+        },
+
+        //*====================== create ======================
+
+        async saveQuestion(status) {
+            //main
+            if (status === 1) {
+                //post
+                app.postMainQuestion();
+            } else if (status === 0) {
+                //put
+                app.putMainQuestion();
+            } else {
+                //add question
+                await app.postSubQuestion(app.questionId);
+                setTimeout(() => {
+                    app.addPop = false;
+                }, 1000);
+            }
+        },
+
+        postMainQuestion() {
+            app.mainQuestion.questionTypeId = app.popType;
+            if (app.mainQuestion.question === "") {
+                app.mainQuestion.question = app.subQuestion[0].optionQuestion;
+            }
+            const json = JSON.stringify(app.mainQuestion);
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: "https://questionapi-docker.funday.asia:9010/api/Questions/Updated",
+                    method: "POST",
+                    data: json,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: async function (res) {
+                        console.log(res);
+                        await app.setQuestionToTest(res.result.id);
+                        await app.postSubQuestion(res.result.id);
+                        app.postChapter(res.result.id);
+                        app.postLearningPoints(res.result.id);
+                        await app.postMainPictures(res.result.id);
+                        setTimeout(() => {
+                            app.pop = false;
+                            location.reload();
+                        }, 1000);
+                    },
+                });
+            });
+        },
+
+        async postSubQuestion(qsId) {
+            for (let i = 0; i < app.subQuestion.length; i++) {
+                const item = app.subQuestion[i];
+                item.questionId = qsId;
+                item.optionNumber = i + 1;
+                const json = JSON.stringify(item);
+                const res = await postContent();
+
+                function postContent() {
+                    return new Promise((resolve, reject) => {
+                        $.ajax({
+                            url: "https://questionapi-docker.funday.asia:9010/api/QuestionOptions",
+                            method: "POST",
+                            data: json,
+                            dataType: "json",
+                            contentType: "application/json;charset=utf-8",
+                            success: async function (res) {
+                                console.log(res);
+                                app.postOption(qsId, res.result.id, i);
+                                await app.postSubPictures(
+                                    qsId,
+                                    res.result.id,
+                                    i
+                                );
+                                resolve();
+                            },
+                        });
+                    });
+                }
+            }
+        },
+
+        async postOption(qsId, opId, index) {
+            let arr;
+            if (app.popType === 4) {
+                arr = app.booleanOption;
+            } else {
+                arr = app.options;
+            }
+
+            for (let i = 0; i < arr[index].length; i++) {
+                const ele = arr[index][i];
+                ele.questionOptionId = opId;
+                const json = JSON.stringify(ele);
+                const res = await postContent();
+                function postContent() {
+                    return new Promise((resolve, reject) => {
+                        $.ajax({
+                            url: "https://questionapi-docker.funday.asia:9010/api/QuestionOptionDetails",
+                            method: "POST",
+                            data: json,
+                            dataType: "json",
+                            contentType: "application/json;charset=utf-8",
+                            success: async function (res) {
+                                console.log(res);
+                                await app.postOptionPictures(
+                                    qsId,
+                                    opId,
+                                    res.result.id,
+                                    index,
+                                    i
+                                );
+                                resolve();
+                            },
+                        });
+                    });
+                }
+            }
+        },
+
+        postMainPictures(qsId) {
+            return new Promise((resolve, reject) => {
+                if (app.mainPictures.length === 0) resolve();
+                const item = app.mainPictures[0];
+                item.questionId = qsId;
+                //uploadFiles
+                const formData = new FormData();
+                formData.append("file", item.files);
+                $.ajax({
+                    url: `https://questionapi-docker.funday.asia:9010/api/Files?folderName=${qsId}&fileName=${item.fileName}`,
+                    method: "POST",
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    data: formData,
+                    success: function (res) {
+                        postFileName();
+                    },
+                });
+
+                // post fileName
+                function postFileName() {
+                    delete item["files"];
+                    const name = `${qsId}/${item.fileName}`;
+                    item.fileName = name;
+                    const json = JSON.stringify(item);
+                    $.ajax({
+                        url: "https://questionapi-docker.funday.asia:9010/api/QuestionPictures/Updated",
+                        method: "POST",
+                        data: json,
+                        dataType: "json",
+                        contentType: "application/json;charset=utf-8",
+                        success: function (res) {
+                            resolve();
+                        },
+                    });
+                }
+            });
+        },
+        postSubPictures(qsId, opId, index) {
+            return new Promise((resolve, reject) => {
+                console.log(app.subPictures[index]);
+                if (app.subPictures[index][0] == undefined) resolve();
+                const item = app.subPictures[index][0];
+                console.log(qsId, item);
+                item.questionId = qsId;
+                item.questionOptionId = opId;
+                //uploadFiles
+                const formData = new FormData();
+                formData.append("file", item.files);
+                console.log(formData, item);
+                $.ajax({
+                    url: `https://questionapi-docker.funday.asia:9010/api/Files?folderName=${qsId}&fileName=${item.fileName}`,
+                    method: "POST",
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    data: formData,
+                    success: function (res) {
+                        console.log(res);
+                        postFileName();
+                    },
+                });
+
+                // post fileName
+                function postFileName() {
+                    console.log("1");
+                    delete item["files"];
+                    const name = `${qsId}/${item.fileName}`;
+                    item.fileName = name;
+                    console.log(item);
+                    const json = JSON.stringify(item);
+                    $.ajax({
+                        url: "https://questionapi-docker.funday.asia:9010/api/QuestionPictures/Updated",
+                        method: "POST",
+                        data: json,
+                        dataType: "json",
+                        contentType: "application/json;charset=utf-8",
+                        success: function (res) {
+                            console.log(res);
+                            resolve();
+                        },
+                    });
+                }
+            });
+        },
+        postOptionPictures(qsId, opId, deId, index, num) {
+            return new Promise((resolve, reject) => {
+                if (app.optionPictures[index][num] == undefined) resolve();
+                const item = app.optionPictures[index][num];
+                item.questionId = qsId;
+                item.questionOptionId = opId;
+                item.questionOptionDetailId = deId;
+                //uploadFiles
+                const formData = new FormData();
+                formData.append("file", item.files);
+                $.ajax({
+                    url: `https://questionapi-docker.funday.asia:9010/api/Files?folderName=${qsId}&fileName=${item.fileName}`,
+                    method: "POST",
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    data: formData,
+                    success: function (res) {
+                        postFileName();
+                    },
+                });
+
+                // post fileName
+                function postFileName() {
+                    delete item["files"];
+                    const name = `${qsId}/${item.fileName}`;
+                    item.fileName = name;
+                    const json = JSON.stringify(item);
+                    $.ajax({
+                        url: "https://questionapi-docker.funday.asia:9010/api/QuestionPictures/Updated",
+                        method: "POST",
+                        data: json,
+                        dataType: "json",
+                        contentType: "application/json;charset=utf-8",
+                        success: function (res) {
+                            resolve();
+                        },
+                    });
+                }
+            });
+        },
+        postChapter(qsId) {
+            app.chapters.forEach((item) => {
+                item.questionId = qsId;
+                delete item["text"];
+                const json = JSON.stringify(item);
+                $.ajax({
+                    url: "https://questionapi-docker.funday.asia:9010/api/QuestionChapters",
+                    method: "POST",
+                    data: json,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: function (res) {},
+                });
+            });
+        },
+        postLearningPoints(qsId) {
+            app.learningPoints.forEach((item) => {
+                item.questionId = qsId;
+                const json = JSON.stringify(item);
+                $.ajax({
+                    url: "https://questionapi-docker.funday.asia:9010/api/QuestionLearningPoints/Updated",
+                    method: "POST",
+                    data: json,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: function (res) {},
+                });
+            });
+        },
+
+        //* ================= update ====================
+        putMainQuestion() {
+            if (app.mainQuestion.questionTypeId !== 2) {
+                app.mainQuestion.question = app.subQuestion[0].optionQuestion;
+            }
+            const json = JSON.stringify(app.mainQuestion);
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: "https://questionapi-docker.funday.asia:9010/api/Questions/Updated",
+                    method: "PUT",
+                    data: json,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    success: async function (res) {
+                        console.log(res);
+                        const qsId = res.result.id;
+                        await app.putSubQuestion(qsId);
+                        app.updateChapter(qsId);
+                        app.putLearningPoints(qsId);
+                        setTimeout(() => {
+                            app.pop = false;
+                            location.reload();
+                        }, 1000);
+                    },
+                });
+            });
+        },
+
+        async putSubQuestion(qsId) {
+            console.log(app.subQuestion);
+            for (let i = 0; i < app.subQuestion.length; i++) {
+                const item = app.subQuestion[i];
+                item.questionId = qsId;
+                item.optionNumber = i + 1;
+                const json = JSON.stringify(item);
+                const res = await postContent();
+
+                function postContent() {
+                    return new Promise((resolve, reject) => {
+                        $.ajax({
+                            url: "https://questionapi-docker.funday.asia:9010/api/QuestionOptions",
+                            method: "PUT",
+                            data: json,
+                            dataType: "json",
+                            contentType: "application/json;charset=utf-8",
+                            success: async function (res) {
+                                app.putOption(qsId, res.result.id, i);
+                                app.putApproveStatus(qsId, res.result.id);
+                                resolve();
+                            },
+                        });
+                    });
+                }
+            }
+        },
+
+        async putOption(qsId, opId, index) {
+            let arr;
+            if (app.popType === 4) {
+                arr = app.booleanOption;
+            } else {
+                arr = app.options;
+            }
+
+            for (let i = 0; i < arr[index].length; i++) {
+                const ele = arr[index][i];
+                ele.questionOptionId = opId;
+                const json = JSON.stringify(ele);
+                const res = await postContent();
+                function postContent() {
+                    return new Promise((resolve, reject) => {
+                        $.ajax({
+                            url: "https://questionapi-docker.funday.asia:9010/api/QuestionOptionDetails",
+                            method: "PUT",
+                            data: json,
+                            dataType: "json",
+                            contentType: "application/json;charset=utf-8",
+                            success: async function (res) {
+                                console.log(res);
+                                resolve();
+                            },
+                        });
+                    });
+                }
+            }
+        },
+
+        putApproveStatus(qsId, opId) {
+            const optionJson = JSON.stringify({
+                id: opId,
+                approvalStatusId: 0,
+            });
+            $.ajax({
+                url: "https://questionapi-docker.funday.asia:9010/api/QuestionOptions/ApprovalStatus",
+                method: "PUT",
+                data: optionJson,
+                dataType: "json",
+                contentType: "application/json;charset=utf-8",
+                success: function (res) {
+                    console.log(res);
+                },
+            });
+            const questionJson = JSON.stringify({
+                id: qsId,
+                approvalStatusId: 0,
+            });
+            $.ajax({
+                url: "https://questionapi-docker.funday.asia:9010/api/Questions/ApprovalStatus",
+                method: "PUT",
+                data: questionJson,
+                dataType: "json",
+                contentType: "application/json;charset=utf-8",
+                success: function (res) {
+                    console.log(res);
+                },
+            });
+        },
+
+        updateChapter(qsId) {
+            //delete
+            $.ajax({
+                url: `https://questionapi-docker.funday.asia:9010/api/QuestionChapters/byQuestion/${qsId}`,
+                method: "DELETE",
+                success: function (res) {
+                    //post new chapter
+                    app.postChapter(qsId);
+                },
+            });
+        },
+
+        putLearningPoints(qsId) {
+            //delete
+            $.ajax({
+                url: `https://questionapi-docker.funday.asia:9010/api/QuestionLearningPoints/ByQuestionId/${qsId}`,
+                method: "DELETE",
+                success: function (res) {
+                    //post new learning points
+                    app.postLearningPoints(qsId);
+                },
+            });
+        },
+
+        //* ================= update ====================
+        recheck() {
+            if (document.querySelectorAll(".reject").length > 0) {
+                alert("請先訂正所有黃標的題目");
+            } else {
+                const testJson = JSON.stringify({
+                    id: app.testId,
+                    approvalStatusId: 0,
+                });
+                $.ajax({
+                    url: "https://questionapi-docker.funday.asia:9010/api/Tests/UpdateApprovalStatus",
+                    method: "PUT",
+                    data: testJson,
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                });
+                location.href = "../index.html";
+            }
         },
     },
 });
