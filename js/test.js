@@ -211,11 +211,15 @@ let app = new Vue({
                 url: `https://questionapi-docker.funday.asia:9010/api/Tests?SubjectId=${this.nowSubject}&SemesterId=${this.nowSemester}&PageNumber=${this.nowPage}&PageSize=10&ApprovalStatusId=${this.status}&SearchText=${this.searchText}`,
                 method: "GET",
                 success: function (res) {
-                    console.log(res);
                     app.testList = res;
                     app.getTestCount();
                 },
             });
+        },
+
+        search() {
+            app.nowPage = 1;
+            app.getExamList();
         },
 
         getTestCount() {
@@ -229,36 +233,25 @@ let app = new Vue({
                     for (let i = 0; i < item; i++) {
                         app.testCount.push(i + 1);
                     }
-                    console.log(app.testCount);
-                },
-            });
-        },
-
-        search() {
-            const text = document.getElementById("searchText").value;
-            $.ajax({
-                url: `https://questionapi-docker.funday.asia:9010/api/Tests?SubjectId=${this.nowSubject}&SemesterId=${this.nowSemester}&PageNumber=${this.nowPage}&PageSize=10&ApprovalStatusId=${app.status}&SearchText=${text}`,
-                method: "GET",
-                success: function (res) {
-                    console.log(res);
-                    app.testList = res;
-                    app.getTestCount();
                 },
             });
         },
 
         subjectChange(e) {
             this.nowSubject = Number(e.target.value);
+            app.nowPage = 1;
             this.getExamList(app.status);
         },
 
         statusChange(e) {
             this.status = Number(e.target.value);
+            app.nowPage = 1;
             this.getExamList();
         },
 
         gradeChange(e) {
             this.nowSemester = e.target.value;
+            app.nowPage = 1;
             this.getExamList(app.status);
         },
 
@@ -276,7 +269,6 @@ let app = new Vue({
         `,
                 method: "GET",
                 success: function (res) {
-                    console.log(res);
                     if (res === "") {
                         alert("此考卷尚未有考題");
                         return;
@@ -328,7 +320,6 @@ let app = new Vue({
             const totalCount = document.querySelectorAll(
                 "input[type=radio]:checked"
             ).length;
-            console.log(totalCount, this.questionCount);
             const wrongCount =
                 document.querySelectorAll(".wrong:checked").length;
 
@@ -471,24 +462,19 @@ let app = new Vue({
                     data: optionJson,
                     dataType: "json",
                     contentType: "application/json;charset=utf-8",
-                    success: function (res) {
-                        // console.log(res);
-                    },
+                    success: function (res) {},
                 });
                 const questionJson = JSON.stringify({
                     id: app.questionCorrectList[i],
                     approvalStatusId: 2,
                 });
-                console.log(app.questionCorrectList[i]);
                 $.ajax({
                     url: "https://questionapi-docker.funday.asia:9010/api/Questions/ApprovalStatus",
                     method: "PUT",
                     data: questionJson,
                     dataType: "json",
                     contentType: "application/json;charset=utf-8",
-                    success: function (res) {
-                        // console.log(res);
-                    },
+                    success: function (res) {},
                 });
             }
 
@@ -502,9 +488,7 @@ let app = new Vue({
                 data: testJson,
                 dataType: "json",
                 contentType: "application/json;charset=utf-8",
-                success: async function (res) {
-                    // console.log(res);
-                },
+                success: async function (res) {},
             });
             app.checkPop = false;
             setTimeout(() => {
@@ -597,9 +581,7 @@ let app = new Vue({
                     data: optionJson,
                     dataType: "json",
                     contentType: "application/json;charset=utf-8",
-                    success: function (res) {
-                        // console.log(res);
-                    },
+                    success: function (res) {},
                 });
                 const questionJson = JSON.stringify({
                     id: app.questionCorrectList[i],
@@ -611,9 +593,7 @@ let app = new Vue({
                     data: questionJson,
                     dataType: "json",
                     contentType: "application/json;charset=utf-8",
-                    success: function (res) {
-                        // console.log(res);
-                    },
+                    success: function (res) {},
                 });
             }
 
@@ -634,9 +614,7 @@ let app = new Vue({
                     data: optionComment,
                     dataType: "json",
                     contentType: "application/json;charset=utf-8",
-                    success: function (res) {
-                        console.log(res);
-                    },
+                    success: function (res) {},
                 });
 
                 //put option status
@@ -650,9 +628,7 @@ let app = new Vue({
                     data: optionJson,
                     dataType: "json",
                     contentType: "application/json;charset=utf-8",
-                    success: function (res) {
-                        console.log(res, optionJson);
-                    },
+                    success: function (res) {},
                 });
 
                 //put question status
@@ -681,9 +657,7 @@ let app = new Vue({
                 data: testJson,
                 dataType: "json",
                 contentType: "application/json;charset=utf-8",
-                success: async function (res) {
-                    // console.log(res);
-                },
+                success: async function (res) {},
             });
 
             app.checkPop = false;
@@ -729,9 +703,7 @@ let app = new Vue({
                     data: nameJson,
                     dataType: "json",
                     contentType: "application/json;charset=utf-8",
-                    success: function (res) {
-                        console.log(res);
-                    },
+                    success: function (res) {},
                 });
             }
 

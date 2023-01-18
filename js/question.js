@@ -365,7 +365,6 @@ let app = new Vue({
                 fileName: e.target.files[0].name,
                 files: e.target.files[0],
             };
-            console.log(pictureObj);
             switch (typeId) {
                 case 1: //main
                     pictureObj.questionPictureTypeId = typeId;
@@ -389,7 +388,6 @@ let app = new Vue({
                         app.subPictures[index].splice(subIndex, 1);
                     }
                     app.subPictures[index].push(pictureObj);
-                    console.log(pictureObj);
                     if (app.isEdit) {
                         app.putPictures(
                             pictureObj,
@@ -426,7 +424,6 @@ let app = new Vue({
                             deIndex
                         );
                     }
-                    console.log(pictureObj);
             }
         },
 
@@ -442,7 +439,6 @@ let app = new Vue({
                 //         url: `https://questionapi-docker.funday.asia:9010/api/Files/${item.id}`,
                 //         method: "DELETE",
                 //         success: function (res) {
-                //             console.log(res, item);
                 //         },
                 //     });
                 // }
@@ -450,11 +446,9 @@ let app = new Vue({
                     case 1:
                         if (app.questionObj.questionPictures[0] == undefined) {
                             item.id = 0;
-                            console.log("1");
                             uploadFiles();
                         } else {
                             item.id = app.questionObj.questionPictures[0].id;
-                            console.log("2");
                             uploadFiles();
                         }
                         break;
@@ -505,7 +499,6 @@ let app = new Vue({
                 function uploadFiles() {
                     const formData = new FormData();
                     formData.append("file", item.files);
-                    console.log(item.fileName);
                     $.ajax({
                         url: `https://questionapi-docker.funday.asia:9010/api/Files?folderName=${qsId}&fileName=${item.fileName}`,
                         method: "POST",
@@ -514,7 +507,6 @@ let app = new Vue({
                         dataType: "json",
                         data: formData,
                         success: function (res) {
-                            console.log(res);
                             postFileName();
                         },
                     });
@@ -525,8 +517,6 @@ let app = new Vue({
                     delete item["files"];
                     const name = `${qsId}/${item.fileName}`;
                     item.fileName = name;
-                    console.log(item.fileName);
-                    // item.id = app.questionObj.questionPictures[0].id;
                     const json = JSON.stringify(item);
                     $.ajax({
                         url: "https://questionapi-docker.funday.asia:9010/api/QuestionPictures",
@@ -535,7 +525,6 @@ let app = new Vue({
                         dataType: "json",
                         contentType: "application/json;charset=utf-8",
                         success: function (res) {
-                            console.log(res, item);
                             resolve();
                         },
                     });
@@ -582,7 +571,6 @@ let app = new Vue({
                 `,
                 method: "GET",
                 success: function (res) {
-                    console.log(res);
                     const arr = res;
                     arr.forEach((item) => {
                         let obj = {
@@ -604,7 +592,6 @@ let app = new Vue({
         `,
                 method: "GET",
                 success: function (res) {
-                    console.log(res);
                     if (res === "") return;
                     const list = res.questions;
                     app.questionCount = res.questionCount;
@@ -750,7 +737,6 @@ let app = new Vue({
                 `,
                 method: "GET",
                 success: async function (res) {
-                    console.log(res);
                     app.isEdit = false;
                     app.initQuestionObj(type);
                     app.initQuestion(type);
@@ -760,7 +746,6 @@ let app = new Vue({
                         res.questionOptions.length + 1;
                     app.subQuestion[0].questionId = id;
                     app.questionId = id;
-                    console.log(app.subQuestion, app.options);
                 },
             });
         },
@@ -773,7 +758,6 @@ let app = new Vue({
                 `,
                 method: "GET",
                 success: async function (res) {
-                    console.log(res);
                     app.questionObj = res; // question info
                     //edit question
                     app.mainQuestion = {
@@ -946,7 +930,6 @@ let app = new Vue({
 
         uploadFile(folderName, fileName) {
             return new Promise((resolve, reject) => {
-                console.log(folderName);
                 resolve();
             });
         },
@@ -1015,7 +998,6 @@ let app = new Vue({
                             dataType: "json",
                             contentType: "application/json;charset=utf-8",
                             success: async function (res) {
-                                console.log(res);
                                 app.postOption(qsId, res.result.id, i);
                                 await app.postSubPictures(
                                     qsId,
@@ -1052,7 +1034,6 @@ let app = new Vue({
                             dataType: "json",
                             contentType: "application/json;charset=utf-8",
                             success: async function (res) {
-                                console.log(res);
                                 await app.postOptionPictures(
                                     qsId,
                                     opId,
@@ -1109,16 +1090,13 @@ let app = new Vue({
         },
         postSubPictures(qsId, opId, index) {
             return new Promise((resolve, reject) => {
-                console.log(app.subPictures[index]);
                 if (app.subPictures[index][0] == undefined) resolve();
                 const item = app.subPictures[index][0];
-                console.log(qsId, item);
                 item.questionId = qsId;
                 item.questionOptionId = opId;
                 //uploadFiles
                 const formData = new FormData();
                 formData.append("file", item.files);
-                console.log(formData, item);
                 $.ajax({
                     url: `https://questionapi-docker.funday.asia:9010/api/Files?folderName=${qsId}&fileName=${item.fileName}`,
                     method: "POST",
@@ -1127,18 +1105,15 @@ let app = new Vue({
                     dataType: "json",
                     data: formData,
                     success: function (res) {
-                        console.log(res);
                         postFileName();
                     },
                 });
 
                 // post fileName
                 function postFileName() {
-                    console.log("1");
                     delete item["files"];
                     const name = `${qsId}/${item.fileName}`;
                     item.fileName = name;
-                    console.log(item);
                     const json = JSON.stringify(item);
                     $.ajax({
                         url: "https://questionapi-docker.funday.asia:9010/api/QuestionPictures/Updated",
@@ -1147,7 +1122,6 @@ let app = new Vue({
                         dataType: "json",
                         contentType: "application/json;charset=utf-8",
                         success: function (res) {
-                            console.log(res);
                             resolve();
                         },
                     });
@@ -1239,7 +1213,6 @@ let app = new Vue({
                     dataType: "json",
                     contentType: "application/json;charset=utf-8",
                     success: async function (res) {
-                        console.log(res);
                         const qsId = res.result.id;
                         await app.putSubQuestion(qsId);
                         app.updateChapter(qsId);
@@ -1306,7 +1279,6 @@ let app = new Vue({
                             dataType: "json",
                             contentType: "application/json;charset=utf-8",
                             success: async function (res) {
-                                console.log(res);
                                 resolve();
                             },
                         });
@@ -1330,9 +1302,7 @@ let app = new Vue({
                 data: optionJson,
                 dataType: "json",
                 contentType: "application/json;charset=utf-8",
-                success: function (res) {
-                    console.log(res);
-                },
+                success: function (res) {},
             });
             const questionJson = JSON.stringify({
                 id: qsId,
@@ -1344,9 +1314,7 @@ let app = new Vue({
                 data: questionJson,
                 dataType: "json",
                 contentType: "application/json;charset=utf-8",
-                success: function (res) {
-                    console.log(res);
-                },
+                success: function (res) {},
             });
         },
 
