@@ -118,7 +118,6 @@ let app = new Vue({
         const testId = urlParams.get("testId");
         this.grade = Number(urlParams.get("grade"));
         this.approveStatus = Number(urlParams.get("status"));
-        console.log(this.grade);
         this.testName = name;
         this.subject = this.subjectTrans(this.subjectId);
         this.getLearningPoints(this.subjectId);
@@ -985,7 +984,6 @@ let app = new Vue({
                     dataType: "json",
                     contentType: "application/json;charset=utf-8",
                     success: async function (res) {
-                        console.log(res);
                         await app.setQuestionToTest(res.result.id);
                         await app.postSubQuestion(res.result.id);
                         app.postChapter(res.result.id);
@@ -1256,7 +1254,6 @@ let app = new Vue({
         },
 
         async putSubQuestion(qsId) {
-            console.log(app.subQuestion);
             for (let i = 0; i < app.subQuestion.length; i++) {
                 const item = app.subQuestion[i];
                 item.questionId = qsId;
@@ -1274,7 +1271,11 @@ let app = new Vue({
                             contentType: "application/json;charset=utf-8",
                             success: async function (res) {
                                 app.putOption(qsId, res.result.id, i);
-                                app.putApproveStatus(qsId, res.result.id);
+                                app.putApproveStatus(
+                                    qsId,
+                                    res.result.id,
+                                    res.result.approvalStatusId
+                                );
                                 resolve();
                             },
                         });
@@ -1314,10 +1315,14 @@ let app = new Vue({
             }
         },
 
-        putApproveStatus(qsId, opId) {
+        putApproveStatus(qsId, opId, statusId) {
+            let status = 0;
+            if (statusId === 2) {
+                status = 2;
+            }
             const optionJson = JSON.stringify({
                 id: opId,
-                approvalStatusId: 0,
+                approvalStatusId: status,
             });
             $.ajax({
                 url: "https://questionapi-docker.funday.asia:9010/api/QuestionOptions/ApprovalStatus",

@@ -223,7 +223,7 @@
                                 <i
                                     class="fa-solid fa-plus"
                                     @click="addGroupQuestion(item.id,2)"
-                                    v-if="item.approvalStatusId !== 1 && item.approvalStatusId !== 2"
+                                    v-if="approveStatus === 0 && item.approvalStatusId !== 2"
                                 >
                                     <span>加題目</span></i
                                 >

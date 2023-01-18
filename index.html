@@ -14,6 +14,7 @@
         />
         <link rel="stylesheet" href="./css/base.css" />
         <link rel="stylesheet" href="./css/index.css" />
+        <link rel="stylesheet" href="./css/pagination.css" />
         <script
             src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"
             integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA=="
@@ -301,6 +302,7 @@
                             </td>
                             <td v-if="status===-1">
                                 <button
+                                    v-if="item.testName.indexOf('下架') === -1"
                                     @click="copyTest(item.id,item.testName,item.schoolYearId,item.duration,item.testTypeId)"
                                 >
                                     複製
@@ -309,6 +311,38 @@
                         </tr>
                     </tbody>
                 </table>
+            </section>
+            <section id="pagination">
+                <div class="wrapper">
+                    <ul
+                        class="pagination"
+                        role="menubar"
+                        aria-label="Pagination"
+                    >
+                        <li>
+                            <a href=""><span>First</span></a>
+                        </li>
+                        <li>
+                            <a href=""><span>Previous</span></a>
+                        </li>
+                        <li><a href="">1</a></li>
+                        <li><a href="">2</a></li>
+                        <li><a href="">3</a></li>
+                        <li class="current"><a href="">4</a></li>
+                        <li><a href="">5</a></li>
+                        <li><a href="">6</a></li>
+                        <li><a href="">7</a></li>
+                        <li><a href="">8</a></li>
+                        <li><a href="">9</a></li>
+                        <li><a href="">10</a></li>
+                        <li>
+                            <a href=""><span>Next</span></a>
+                        </li>
+                        <li>
+                            <a href=""><span>Last</span></a>
+                        </li>
+                    </ul>
+                </div>
             </section>
             <section id="exam_pop" v-show="pop">
                 <i class="fa-solid fa-xmark" @click="pop = !pop"></i>
@@ -348,6 +382,7 @@
                     <div id="group_content" v-if="group.length > 0">
                         <h2>題組</h2>
                         <div v-for="(item,index) in group">
+                            <span>題組{{index+1}}</span>
                             <div
                                 class="denied"
                                 v-if="item.approvalStatusId === -1"
@@ -465,7 +500,9 @@
                                         alt=""
                                         v-if="item.options[0].optionPictures.length > 0"
                                     />
-                                    <div>
+                                    <div
+                                        v-if="item.options[0].optionTranslation"
+                                    >
                                         翻譯:{{item.options[0].optionTranslation}}
                                     </div>
                                     <ul>
@@ -498,9 +535,12 @@
                     <div id="group_content" v-if="group.length > 0">
                         <h2>題組</h2>
                         <div v-for="(item,index) in group">
+                            <span>題組{{index+1}}</span>
                             <div class="group_question">{{item.question}}</div>
                             <div class="trans_title"></div>
-                            <div>翻譯:{{item.translation }}</div>
+                            <div v-if="item.translation">
+                                翻譯:{{item.translation}}
+                            </div>
                             <img
                                 :src="item.pictures[0].pictureLink"
                                 alt=""
@@ -517,7 +557,7 @@
                                         :id="'groupCorrect'+index+id"
                                         :name="'group'+index+id"
                                         @change="actionCheck"
-                                        :checked="item.approvalStatusId === 2"
+                                        :checked="op.approvalStatusId === 2"
                                     />
                                     <label
                                         :for="'groupCorrect'+index+id"
@@ -532,7 +572,7 @@
                                         @change="actionCheck"
                                     />
                                     <label
-                                        v-if="item.approvalStatusId !== 2"
+                                        v-if="op.approvalStatusId !== 2"
                                         :for="'groupFault'+index+id"
                                         @click="checkQuestion(1,'group',item.id,op.id)"
                                         >有誤</label
@@ -542,7 +582,9 @@
                                             {{id+1}}.{{op.optionQuestion}}
                                         </div>
                                         <div class="trans_title"></div>
-                                        <div>翻譯:{{op.optionTranslation}}</div>
+                                        <div v-if="op.optionTranslation">
+                                            翻譯:{{op.optionTranslation}}
+                                        </div>
                                         <img
                                             :src="op.optionPictures[0].pictureLink"
                                             alt=""
@@ -622,7 +664,9 @@
                                             {{ index + 1 }}.{{ item.question }}
                                         </div>
                                         <div class="trans_title"></div>
-                                        <div>
+                                        <div
+                                            v-if="item.options[0].optionTranslation"
+                                        >
                                             翻譯:{{item.options[0].optionTranslation}}
                                         </div>
                                         <img
@@ -714,7 +758,9 @@
                                         {{index+1}}.{{item.options[0].optionQuestion}}
                                     </div>
                                     <div class="trans_title"></div>
-                                    <div>
+                                    <div
+                                        v-if="item.options[0].optionTranslation"
+                                    >
                                         翻譯:{{item.options[0].optionTranslation}}
                                     </div>
                                     <img
@@ -747,7 +793,9 @@
                         <div v-for="(item,index) in group">
                             <div class="group_question">{{item.question}}</div>
                             <div class="trans_title"></div>
-                            <div>翻譯:{{item.translation }}</div>
+                            <div v-if="item.translation">
+                                翻譯:{{item.translation}}
+                            </div>
                             <img
                                 :src="item.pictures[0].pictureLink"
                                 alt=""
@@ -785,7 +833,9 @@
                                             {{id+1}}.{{op.optionQuestion}}
                                         </div>
                                         <div class="trans_title"></div>
-                                        <div>翻譯:{{op.optionTranslation}}</div>
+                                        <div v-if="op.optionTranslation">
+                                            翻譯:{{op.optionTranslation}}
+                                        </div>
                                         <img
                                             :src="op.optionPictures[0].pictureLink"
                                             alt=""
@@ -847,7 +897,9 @@
                                             {{ index + 1 }}.{{ item.question }}
                                         </div>
                                         <div class="trans_title"></div>
-                                        <div>
+                                        <div
+                                            v-if="item.options[0].optionTranslation"
+                                        >
                                             翻譯:{{item.options[0].optionTranslation}}
                                         </div>
                                         <img

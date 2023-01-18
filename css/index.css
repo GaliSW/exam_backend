@@ -180,7 +180,7 @@ select {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-bottom: 50px;
+    padding-bottom: 25px;
 }
 #exam_list h1 {
     font-size: 24px;
@@ -405,7 +405,10 @@ select {
     font-size: 24px;
     color: #bb4040;
 }
-
+#exam_pop .pop_wrapper #group_content > div > span {
+    font-size: 24px;
+    font-weight: bold;
+}
 #exam_pop .pop_wrapper > div ul {
     list-style: none;
     padding: 0;
@@ -580,7 +583,10 @@ select {
     font-size: 24px;
     color: #bb4040;
 }
-
+#check_pop .pop_wrapper #group_content > div > span {
+    font-size: 24px;
+    font-weight: bold;
+}
 #check_pop .pop_wrapper > div ul {
     list-style: none;
     padding: 0;

@@ -13,6 +13,7 @@ let app = new Vue({
         subjectId: "",
         testTypeId: "",
         grade: 0,
+        semester: 0,
         explanation: "string",
         duration: "",
         deletePop: {
@@ -43,34 +44,42 @@ let app = new Vue({
             switch (Number(document.getElementById("semester").value)) {
                 case 0:
                     this.grade = 4;
+                    this.semester = 0;
                     chSemester = "(素養)";
                     break;
                 case 1:
                     this.grade = 1;
+                    this.semester = 1;
                     chSemester = "(七上)";
                     break;
                 case 2:
                     this.grade = 1;
+                    this.semester = 2;
                     chSemester = "(七下)";
                     break;
                 case 3:
                     this.grade = 2;
+                    this.semester = 3;
                     chSemester = "(八上)";
                     break;
                 case 4:
                     this.grade = 2;
+                    this.semester = 4;
                     chSemester = "(八下)";
                     break;
                 case 5:
                     this.grade = 3;
+                    this.semester = 5;
                     chSemester = "(九上)";
                     break;
                 case 6:
                     this.grade = 3;
+                    this.semester = 6;
                     chSemester = "(九下)";
                     break;
                 case 7:
                     this.grade = 3;
+                    this.semester = 7;
                     chSemester = "(總複習)";
                     break;
                 default:
@@ -450,6 +459,30 @@ let app = new Vue({
         },
 
         checkQuestion(status, type, qsId, opId) {
+            let copindex = app.optionCorrectList.findIndex((el) => {
+                return el === opId;
+            });
+            if (copindex > -1) {
+                app.optionCorrectList.splice(copindex, 1);
+            }
+            let cqsindex = app.questionCorrectList.findIndex((el) => {
+                return el === qsId;
+            });
+            if (cqsindex > -1) {
+                app.questionCorrectList.splice(cqsindex, 1);
+            }
+            let wopindex = app.optionWrongList.findIndex((el) => {
+                return el === opId;
+            });
+            if (wopindex > -1) {
+                app.optionWrongList.splice(wopindex, 1);
+            }
+            let wqsindex = app.questionWrongList.findIndex((el) => {
+                return el === opId;
+            });
+            if (wqsindex > -1) {
+                app.questionWrongList.splice(wqsindex, 1);
+            }
             switch (type) {
                 case "single":
                     if (status === 2) {
@@ -619,7 +652,6 @@ let app = new Vue({
                             qsList.push(item.id);
                         }
                     });
-                    console.log(qsList);
                     changeName();
                     createNewTest();
                 },
@@ -668,14 +700,11 @@ let app = new Vue({
                         qsList.forEach((item) => {
                             joinQuestionToTest(res.id, item);
                         });
-                        // const url = "http://127.0.0.1:5579/questions.html";
-                        // location.href =
-                        //     url +
-                        //     `?testName=${app.testName}&subject=${app.subjectId}&testId=${res.id}&grade=${app.grade}&status=0`;
                     },
                 });
             }
 
+            //join question to new test
             function joinQuestionToTest(testId, qsId) {
                 const json = JSON.stringify({
                     testId: testId,
@@ -689,7 +718,10 @@ let app = new Vue({
                     dataType: "json",
                     contentType: "application/json;charset=utf-8",
                     success: function (res) {
-                        console.log(res);
+                        setTimeout(() => {
+                            app.status = 0;
+                            app.getExamList(0);
+                        }, 1000);
                     },
                 });
             }
