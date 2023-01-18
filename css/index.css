@@ -266,6 +266,9 @@ select {
     -ms-border-radius: 0 8px 8px 0;
     -o-border-radius: 0 8px 8px 0;
 }
+#exam_list .select_blk .search label:hover {
+    background-color: rgb(93, 93, 93);
+}
 
 #exam_list .list {
     border: 1px solid #284283;
