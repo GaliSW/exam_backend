@@ -1,3 +1,13 @@
+#close {
+    position: fixed;
+    right: 30px;
+    top: 30px;
+    text-decoration: none;
+    color: #284283;
+}
+#close i {
+    font-size: 40px;
+}
 #question_top {
     display: flex;
     flex-direction: column;

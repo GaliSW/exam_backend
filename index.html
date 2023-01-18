@@ -29,6 +29,9 @@
     </head>
     <body>
         <div id="app">
+            <a id="close" href="">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </a>
             <section id="exam_top">
                 <div>
                     <h1>建立考卷</h1>
@@ -234,7 +237,7 @@
                                 placeholder="搜尋考卷"
                                 v-model="searchText"
                             />
-                            <label @click="getExamList()">搜尋</label>
+                            <label @click="search()">搜尋</label>
                         </div>
                     </div>
                 </div>

@@ -1,3 +1,13 @@
+#close {
+    position: fixed;
+    right: 30px;
+    top: 30px;
+    text-decoration: none;
+    color: #284283;
+}
+#close i {
+    font-size: 40px;
+}
 #exam_top > div {
     padding: 50px 0;
     border-bottom: 5px solid rgb(99, 99, 99);
